@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using TDMDEindopdracht.Domain.Services;
 
 namespace TDMDEindopdracht
 {
@@ -15,8 +16,13 @@ namespace TDMDEindopdracht
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
+            builder.Services.AddSingleton<IGeolocation>(Geolocation.Default);
+            builder.Services.AddSingleton<IMap>(Map.Default);
+
+            builder.Services.AddTransient<ViewModel>();
+
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
 
             return builder.Build();
