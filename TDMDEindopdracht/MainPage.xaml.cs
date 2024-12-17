@@ -12,7 +12,7 @@ namespace TDMDEindopdracht
             InitializeComponent();
         }
 
-
+        //LET OP, als deze code in een andere klasse wordt gezet moet je op letten op sychronisatie. 
         public async Task<PermissionStatus> CheckAndRequestLocationPermission()
         {
 
@@ -33,7 +33,7 @@ namespace TDMDEindopdracht
                 if (Permissions.ShouldShowRationale<Permissions.LocationWhenInUse>())
                 {
 
-                    bool shouldContinue = await Application.Current.MainPage.DisplayAlert(
+                    bool shouldContinue = await DisplayAlert(
                         "Locatie vereist",
                         "De app heeft je locatie nodig anders kan de app niet goed werken.",
                         "Toestaan",
@@ -76,7 +76,7 @@ namespace TDMDEindopdracht
 
                 await DisplayAlert("Locatie permissie vereist", "De app heeft toegang tot je locatie nodig om goed te functioneren.", "Ok");
 
-                var shouldOpenSettings = await Application.Current.MainPage.DisplayAlert(
+                var shouldOpenSettings = await DisplayAlert(
                     "Locatie permissie vereist",
                     "De app heeft toegang tot je locatie nodig om goed te functioneren. Ga naar de instellingen om deze in te schakelen.",
                     "Naar Instellingen",
@@ -85,11 +85,14 @@ namespace TDMDEindopdracht
                 if (shouldOpenSettings)
                 {
 
-                    //var intent = new Intent(Android.Provider.Settings.ActionApplicationDetailsSettings);
-                    //var uri = Android.Net.Uri.FromParts("package", Android.App.Application.Context.PackageName, null);
-                    //intent.SetData(uri);
-                    //Android.App.Application.Context.StartActivity(intent);
-                    //todo fiks intent probleem
+#if ANDROID
+  var context = Android.App.Application.Context;
+        var intent = new Android.Content.Intent(Android.Provider.Settings.ActionApplicationDetailsSettings);
+        intent.AddFlags(Android.Content.ActivityFlags.NewTask);
+        var uri = Android.Net.Uri.FromParts("package", context.PackageName, null);
+        intent.SetData(uri);
+        context.StartActivity(intent);
+#endif
                 }
                 else
                 {
