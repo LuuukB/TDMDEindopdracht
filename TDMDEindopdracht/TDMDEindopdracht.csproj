@@ -58,6 +58,7 @@
 
 	<ItemGroup>
 	  <Compile Remove="Domain.Model.cs" />
+	  <Compile Remove="NewPage1.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -70,6 +71,38 @@
 	  <Folder Include="Domain.Model\" />
 	  <Folder Include="Domain.Services\" />
 	  <Folder Include="Infrastructure\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EditorConfigFiles Remove="C:\Users\luukb\OneDrive\Documenten\school\gitKraken\TDMDEindopdracht\TDMDEindopdracht\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove=".editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EditorConfigFiles Remove="C:\Users\luukb\OneDrive\Documenten\school\gitKraken\TDMDEindopdracht\TDMDEindopdracht\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EditorConfigFiles Remove="C:\Users\luukb\OneDrive\Documenten\school\gitKraken\TDMDEindopdracht\TDMDEindopdracht\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EditorConfigFiles Remove="C:\Users\luukb\OneDrive\Documenten\school\gitKraken\TDMDEindopdracht\TDMDEindopdracht\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EditorConfigFiles Remove="C:\Users\luukb\OneDrive\Documenten\school\gitKraken\TDMDEindopdracht\TDMDEindopdracht\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EditorConfigFiles Remove="C:\Users\luukb\OneDrive\Documenten\school\gitKraken\TDMDEindopdracht\TDMDEindopdracht\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EditorConfigFiles Remove="C:\Users\luukb\OneDrive\Documenten\school\gitKraken\TDMDEindopdracht\TDMDEindopdracht\.editorconfig" />
 	</ItemGroup>
 
 </Project>
