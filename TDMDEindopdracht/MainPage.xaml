@@ -57,7 +57,7 @@
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
 
-                    <Picker Title="Gelopen Routes" SelectedIndexChanged="OnPickerSelectedIndexChanged" >
+                    <Picker Title="Gelopen Routes" >
                         <!-- moeten nog items toegevoegd worden aan de Picker -->
                         
                     </Picker>
@@ -71,6 +71,8 @@
                x:Name="LoopActiviteitBtn"
                 Text="Loop een volgende activiteit"
                 HorizontalOptions="End"
+                BorderColor="Black"
+                BorderWidth="2"
                 BackgroundColor="#28A745"
                 TextColor="White"/>
             

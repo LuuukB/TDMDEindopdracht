@@ -74,35 +74,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\luukb\OneDrive\Documenten\school\gitKraken\TDMDEindopdracht\TDMDEindopdracht\.editorconfig" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Remove=".editorconfig" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\luukb\OneDrive\Documenten\school\gitKraken\TDMDEindopdracht\TDMDEindopdracht\.editorconfig" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\luukb\OneDrive\Documenten\school\gitKraken\TDMDEindopdracht\TDMDEindopdracht\.editorconfig" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\luukb\OneDrive\Documenten\school\gitKraken\TDMDEindopdracht\TDMDEindopdracht\.editorconfig" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\luukb\OneDrive\Documenten\school\gitKraken\TDMDEindopdracht\TDMDEindopdracht\.editorconfig" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\luukb\OneDrive\Documenten\school\gitKraken\TDMDEindopdracht\TDMDEindopdracht\.editorconfig" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <EditorConfigFiles Remove="C:\Users\luukb\OneDrive\Documenten\school\gitKraken\TDMDEindopdracht\TDMDEindopdracht\.editorconfig" />
+	  <MauiXaml Update="mapPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	</ItemGroup>
 
 </Project>
