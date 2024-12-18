@@ -2,6 +2,8 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TDMDEindopdracht.MainPage"
+             xmlns:viewmodel = "clr-namespace:TDMDEindopdracht.Domain.Model"
+             x:DataType="viewmodel:ViewModel"
              BackgroundColor="LightGreen"
              >
 
@@ -69,6 +71,7 @@
             <Button
                x:Name="LoopActiviteitBtn"
                 Text="Loop een volgende activiteit"
+                Command="{Binding ViewMapCommand}"
                 HorizontalOptions="End"
                 BorderColor="Black"
                 BorderWidth="2"
