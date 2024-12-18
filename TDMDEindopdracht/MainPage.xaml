@@ -19,10 +19,9 @@
                 HorizontalOptions="Fill"
                 BackgroundColor="Green"/>
 
-        <HorizontalStackLayout>
-           
+            <HorizontalStackLayout HorizontalOptions="Center">
 
-            <Label
+                <Label
                 Text="Welcome to &#10;.NET Multi-platform App UI"
                 Style="{StaticResource SubHeadline}"
                 SemanticProperties.HeadingLevel="Level2"
