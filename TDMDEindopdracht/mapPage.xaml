@@ -4,11 +4,16 @@
              x:Class="TDMDEindopdracht.mapPage"
              xmlns:viewmodel="clr-namespace:TDMDEindopdracht.Domain.Services"
              x:DataType="viewmodel:MapViewModel"
-             BackgroundColor="LightGreen">
+             BackgroundColor="LightGreen"
+             xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps">
     
     <VerticalStackLayout
-         Padding="30,0"
-         >
+         Padding="30,0">
+        <maps:Map 
+            
+            
+            
+            />
 
         <Label
             Text="StraGaan"
@@ -35,7 +40,6 @@
             <Button
                 x:Name="StartRouteBtn"
                 Text="Start a route"
-                Command=""
                 Margin="5"
                 BorderColor="Black"
                 BorderWidth="2"
