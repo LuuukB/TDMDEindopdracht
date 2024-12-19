@@ -79,7 +79,6 @@
 
 	<ItemGroup>
 	  <Folder Include="Domain.Model\" />
-	  <Folder Include="Domain.Services\" />
 	  <Folder Include="Infrastructure\" />
 	</ItemGroup>
 
