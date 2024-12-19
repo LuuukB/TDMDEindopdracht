@@ -7,8 +7,7 @@
              BackgroundColor="LightGreen">
     
     <VerticalStackLayout
-         Padding="30,0"
-         >
+         Padding="30,0">
 
         <Label
             Text="StraGaan"
@@ -23,6 +22,7 @@
             Text="Go back"
             HorizontalOptions="Start"
             BorderColor="Black"
+            Command="{Binding GoToMainPageCommand}"
             BorderWidth="2"
             BackgroundColor="#28A745"
             CornerRadius="45"
@@ -35,7 +35,6 @@
             <Button
                 x:Name="StartRouteBtn"
                 Text="Start a route"
-                Command=""
                 Margin="5"
                 BorderColor="Black"
                 BorderWidth="2"

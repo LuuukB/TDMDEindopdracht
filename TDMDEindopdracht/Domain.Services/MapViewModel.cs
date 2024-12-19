@@ -15,7 +15,7 @@ namespace TDMDEindopdracht.Domain.Services
         [RelayCommand]
         public async Task GoToMainPage()
         {
-            await Shell.Current.GoToAsync("//mapPage");
+            await Shell.Current.GoToAsync("//MainPage");
         }
     }
 }

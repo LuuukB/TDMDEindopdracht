@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using TDMDEindopdracht.Domain.Services;
+using TDMDEindopdracht.Infrastructure;
 
 
 namespace TDMDEindopdracht
@@ -25,16 +26,21 @@ namespace TDMDEindopdracht
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
-            builder.Services.AddSingleton<ViewModel>();
+            
             builder.Services.AddSingleton<MainPage>(s => new MainPage() 
             {
                 BindingContext = s.GetRequiredService<ViewModel>()
             });
-            builder.Services.AddSingleton<MapViewModel>();
+            builder.Services.AddTransient<MapViewModel>();
             builder.Services.AddSingleton<mapPage>(s => new mapPage() 
             {
                 BindingContext = s.GetRequiredService<MapViewModel>()
             });
+
+            string dbPath = Path.Combine(FileSystem.AppDataDirectory, "route.db");
+
+            builder.Services.AddSingleton(s =>
+            ActivatorUtilities.CreateInstance<DatabaseComunicator>(s, dbPath));
 
             return builder.Build();
         }
