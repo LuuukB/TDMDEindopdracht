@@ -1,5 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using TDMDEindopdracht.Domain.Services;
+using TDMDEindopdracht.Domain.Model;
 
 namespace TDMDEindopdracht
 {
@@ -24,6 +25,16 @@ namespace TDMDEindopdracht
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
+            builder.Services.AddSingleton<ViewModel>();
+            builder.Services.AddSingleton<MainPage>(s => new MainPage() 
+            {
+                BindingContext = s.GetRequiredService<ViewModel>()
+            });
+            builder.Services.AddSingleton<MapViewModel>();
+            builder.Services.AddSingleton<mapPage>(s => new mapPage() 
+            {
+                BindingContext = s.GetRequiredService<MapViewModel>()
+            });
 
             return builder.Build();
         }

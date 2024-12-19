@@ -5,11 +5,20 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:TDMDEindopdracht"
     Shell.FlyoutBehavior="Disabled"
-    Title="TDMDEindopdracht">
+    Title="StraGaan"
+    BackgroundColor="LightGreen">
 
+    <TabBar>
+        
     <ShellContent
         Title="Home"
         ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+        Route="MainPage"/>
 
+    <ShellContent
+        Title="MapView"
+        ContentTemplate="{DataTemplate local:mapPage}"
+        Route="mapPage"/>
+        
+    </TabBar>
 </Shell>
