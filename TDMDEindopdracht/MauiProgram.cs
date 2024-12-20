@@ -19,13 +19,9 @@ namespace TDMDEindopdracht
                 });
 
             builder.Services.AddSingleton<IGeolocation>(Geolocation.Default);
-            builder.Services.AddSingleton<IMap>(Map.Default);
+            builder.Services.AddSingleton<Microsoft.Maui.Controls.Maps.Map>();
 
-            builder.Services.AddTransient<ViewModel>();
 
-#if DEBUG
-            builder.Logging.AddDebug();
-#endif
             builder.Services.AddSingleton<ViewModel>();
             builder.Services.AddSingleton<MainPage>(s => new MainPage() 
             {
@@ -36,6 +32,10 @@ namespace TDMDEindopdracht
             {
                 BindingContext = s.GetRequiredService<MapViewModel>()
             });
+#if DEBUG
+            builder.Logging.AddDebug();
+#endif
+            
 
             return builder.Build();
         }
