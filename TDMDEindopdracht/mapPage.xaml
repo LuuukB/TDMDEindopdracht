@@ -45,13 +45,24 @@
                     BorderColor="Black"
                     BorderWidth="2"
                     BackgroundColor="#28A745"/>
+                <Button
+     x:Name="temp"
+     Text="voeg locatie toe"
+     Margin="5"
+                    Command="{Binding locatieToeveogenCommand}"
+     BorderColor="Black"
+     BorderWidth="2"
+     BackgroundColor="#28A745"/>
+
+
             </HorizontalStackLayout>
         </VerticalStackLayout>
-
+    
         <maps:Map x:Name="MapView" 
-                  Grid.Row="1" 
-                  IsShowingUser="True" 
-                  MapType="Street"
-                  BindingContext="{Binding}"/>
+                  BindingContext="{Binding Mappy}"
+                  Grid.Row="1"
+                  IsShowingUser="True"
+                  IsZoomEnabled="True"
+                  MapType="Street"/>
     </Grid>
 </ContentPage>

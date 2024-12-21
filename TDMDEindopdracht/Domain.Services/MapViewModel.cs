@@ -9,16 +9,20 @@ using System.Threading.Tasks;
 using Microsoft.Maui.Maps;
 using Microsoft.Maui.Controls.Maps;
 using System.Diagnostics;
+using System.Collections.ObjectModel;
 
 namespace TDMDEindopdracht.Domain.Services
 {
     public partial class MapViewModel : ObservableObject
     {
 
-        private readonly Map _map;
+        [ObservableProperty]
+        private Map mappy;
         private IGeolocation _geolocation;
 
-        private List<Location> _routeCoordinates = new List<Location>();
+        private readonly List<Location> _routeCoordinates = new();
+
+
 
         [ObservableProperty]
         public MapSpan currentMapSpan;
@@ -28,52 +32,83 @@ namespace TDMDEindopdracht.Domain.Services
 
         public MapViewModel(Map map, IGeolocation geolocation)
         {
-            _map = map;
+            Mappy = map;
             _geolocation = geolocation;
 
-            _geolocation.LocationChanged += LocationChanged;
+            _geolocation.LocationChanged += OnLocationChanged;
         }
 
-       
-        private async void LocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
+
+        private void OnLocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
         {
             if (e?.Location != null)
             {
-
-                CurrentLocation = e.Location.ToString();
-
-
-                _routeCoordinates.Add(new Location(e.Location.Latitude, e.Location.Longitude));
+                Debug.WriteLine("in LocaionCHANGEEDddddddddddddddddddddddddddddddddd");
+                CurrentLocation = $"{e.Location.Latitude}, {e.Location.Longitude}";
 
 
-                CurrentMapSpan = MapSpan.FromCenterAndRadius(e.Location, Distance.FromMeters(500));
-                
+                var newLocation = new Location(e.Location.Latitude, e.Location.Longitude);
+                _routeCoordinates.Add(newLocation);
 
 
-                AddPolylineToMap();
+                currentMapSpan = MapSpan.FromCenterAndRadius(newLocation, Distance.FromMeters(50));
+                Mappy.MoveToRegion(currentMapSpan);
+
+                AddPolylinesToMap();
             }
-            
+
         }
 
-        private void AddPolylineToMap()
+        [RelayCommand]
+        public void locatieToeveogen() {
+            StartLocationUpdates();
+        
+        }
+        private async void StartLocationUpdates()   
         {
-            var polyline = new Polyline
+            try
+            {
+                var location = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(10)));
+                if (location != null)
+                {
+                    Debug.WriteLine($"Current location222: {location.Latitude}, {location.Longitude}");
+                    _routeCoordinates.Add(location);
+
+                    currentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(50));
+                    Mappy.MoveToRegion(currentMapSpan);
+
+                    AddPolylinesToMap();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Geolocation failed: {ex.Message}");
+            }
+        }
+
+
+        private void AddPolylinesToMap()
+        {
+           
+            Polyline polyline = new Polyline
             {
                 StrokeColor = Colors.Blue,
                 StrokeWidth = 5
+                
             };
 
-          
-            foreach (var coordinate in _routeCoordinates)
-            {
-                polyline.Geopath.Add(coordinate);
+            foreach (var line in _routeCoordinates) {
+                Debug.WriteLine("LINES" + line);
+                polyline.Geopath.Add(line);
             }
-
-            
-            _map.MapElements.Clear(); 
-            _map.MapElements.Add(polyline); 
+            Mappy.MapElements.Clear();
+            Mappy.MapElements.Add(polyline);
+            //todo: het heeft de lines wel alleen maakt er geen polyline van op de map. maar de rest is er
+            MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    Mappy.MapElements.Add(polyline);
+                });
         }
-
 
         [RelayCommand]
         public async Task GoToMainPage()

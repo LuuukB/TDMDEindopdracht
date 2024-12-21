@@ -1,3 +1,8 @@
+using Microsoft.Maui.Controls.Maps;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using TDMDEindopdracht.Domain.Services;
+
 namespace TDMDEindopdracht;
 
 public partial class mapPage : ContentPage
@@ -62,7 +67,6 @@ public partial class mapPage : ContentPage
     {
         base.OnAppearing();
 
-
         var status = await CheckAndRequestLocationPermission();
 
 
@@ -94,5 +98,10 @@ public partial class mapPage : ContentPage
                 System.Diagnostics.Process.GetCurrentProcess().Kill();
             }
         }
+    }
+
+    private void MapView_BindingContextChanged(object sender, EventArgs e)
+    {
+
     }
 }
