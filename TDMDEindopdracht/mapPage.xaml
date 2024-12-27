@@ -5,7 +5,8 @@
              xmlns:viewmodel="clr-namespace:TDMDEindopdracht.Domain.Services"
              x:DataType="viewmodel:MapViewModel"
              BackgroundColor="LightGreen"
-             xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps">
+             xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps"
+             xmlns:custom="clr-namespace:TDMDEindopdracht.Domain.Services">
     
 <Grid>
     
@@ -45,24 +46,17 @@
                     BorderColor="Black"
                     BorderWidth="2"
                     BackgroundColor="#28A745"/>
-                <Button
-     x:Name="temp"
-     Text="voeg locatie toe"
-     Margin="5"
-                    Command="{Binding locatieToeveogenCommand}"
-     BorderColor="Black"
-     BorderWidth="2"
-     BackgroundColor="#28A745"/>
-
+              
 
             </HorizontalStackLayout>
         </VerticalStackLayout>
-    
-        <maps:Map x:Name="MapView" 
-                  BindingContext="{Binding Mappy}"
-                  Grid.Row="1"
-                  IsShowingUser="True"
-                  IsZoomEnabled="True"
-                  MapType="Street"/>
+
+        <custom:BindableMap 
+            x:Name="MapView"
+            Grid.Row="1"
+            MapElements="{Binding MapElements}"
+            VisibleRegion="{Binding CurrentMapSpan}"
+            IsShowingUser="True"
+            MapType="Street" />
     </Grid>
 </ContentPage>

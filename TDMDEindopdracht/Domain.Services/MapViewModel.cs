@@ -16,99 +16,181 @@ namespace TDMDEindopdracht.Domain.Services
     public partial class MapViewModel : ObservableObject
     {
 
-        [ObservableProperty]
-        private Map mappy;
+        //[ObservableProperty]
+        //private Map mappy;
+
         private IGeolocation _geolocation;
 
-        private readonly List<Location> _routeCoordinates = new();
+        //private readonly List<Location> _routeCoordinates = new();
 
+        [ObservableProperty]
+        private ObservableCollection<MapElement> mapElements = new();
 
 
         [ObservableProperty]
         public MapSpan currentMapSpan;
 
-        [ObservableProperty]
-        public string currentLocation;
+        //[ObservableProperty]
+        //public string currentLocation;
 
-        public MapViewModel(Map map, IGeolocation geolocation)
+        public MapViewModel( IGeolocation geolocation)
         {
-            Mappy = map;
+            
             _geolocation = geolocation;
 
-            _geolocation.LocationChanged += OnLocationChanged;
-        }
-
-
-        private void OnLocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
-        {
-            if (e?.Location != null)
-            {
-                Debug.WriteLine("in LocaionCHANGEEDddddddddddddddddddddddddddddddddd");
-                CurrentLocation = $"{e.Location.Latitude}, {e.Location.Longitude}";
-
-
-                var newLocation = new Location(e.Location.Latitude, e.Location.Longitude);
-                _routeCoordinates.Add(newLocation);
-
-
-                currentMapSpan = MapSpan.FromCenterAndRadius(newLocation, Distance.FromMeters(50));
-                Mappy.MoveToRegion(currentMapSpan);
-
-                AddPolylinesToMap();
-            }
-
-        }
-
-        [RelayCommand]
-        public void locatieToeveogen() {
+            //_geolocation.LocationChanged += OnLocationChanged;
             StartLocationUpdates();
-        
         }
-        private async void StartLocationUpdates()   
+
+        private async void StartLocationUpdates()
         {
             try
             {
-                var location = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(10)));
-                if (location != null)
+                while (true)
                 {
-                    Debug.WriteLine($"Current location222: {location.Latitude}, {location.Longitude}");
-                    _routeCoordinates.Add(location);
+                    var location = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best));
+                    if (location != null)
+                    {
+                        Debug.WriteLine($"Locatie: {location.Latitude}, {location.Longitude}");
 
-                    currentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(50));
-                    Mappy.MoveToRegion(currentMapSpan);
-
-                    AddPolylinesToMap();
+                        CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(50));
+                        //UpdateRoute(location);
+                    }
+                    Thread.Sleep(1000);
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Geolocation failed: {ex.Message}");
+                Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
             }
         }
-
-
-        private void AddPolylinesToMap()
+        private void UpdateRoute(Location location)
         {
-           
-            Polyline polyline = new Polyline
+
+            //MainThread.BeginInvokeOnMainThread(() =>
+            //{
+
+            //    if (MapElements.FirstOrDefault(e => e is Polyline) is Polyline polyline)
+            //    {
+
+            //        polyline.Geopath.Add(location);
+            //    }
+            //    else
+            //    {
+
+            //        var newPolyline = new Polyline
+            //        {
+            //            StrokeColor = Colors.Blue,
+            //            StrokeWidth = 5
+            //        };
+            //        newPolyline.Geopath.Add(location);
+            //        MapElements.Add(newPolyline);
+            //    }
+            //});
+
+            var polyline = new Polyline
             {
                 StrokeColor = Colors.Blue,
                 StrokeWidth = 5
-                
             };
 
-            foreach (var line in _routeCoordinates) {
-                Debug.WriteLine("LINES" + line);
-                polyline.Geopath.Add(line);
+            foreach (var coord in MapElements.OfType<Polyline>().SelectMany(p => p.Geopath))
+            {
+                polyline.Geopath.Add(coord);
             }
-            Mappy.MapElements.Clear();
-            Mappy.MapElements.Add(polyline);
-            //todo: het heeft de lines wel alleen maakt er geen polyline van op de map. maar de rest is er
-            MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    Mappy.MapElements.Add(polyline);
-                });
+
+            polyline.Geopath.Add(location);
+            //todo mainThread invoke zorgt voor de crash
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                MapElements.Clear();
+                MapElements.Add(polyline);
+            });
         }
+        //private void OnLocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
+        //{
+
+        //    //if (e?.Location != null)
+        //    //{
+        //    //    Debug.WriteLine("Location changed");
+        //    //    UpdateLocation(e.Location);
+        //    //}
+        //    if (e?.Location != null)
+        //    {
+        //        Debug.WriteLine("in LocaionCHANGEEDddddddddddddddddddddddddddddddddd");
+        //        CurrentLocation = $"{e.Location.Latitude}, {e.Location.Longitude}";
+
+
+        //        var newLocation = new Location(e.Location.Latitude, e.Location.Longitude);
+        //        _routeCoordinates.Add(newLocation);
+
+
+        //        CurrentMapSpan = MapSpan.FromCenterAndRadius(newLocation, Distance.FromMeters(50));
+        //        Mappy.MoveToRegion(CurrentMapSpan);
+
+        //        AddPolylinesToMap();
+        //    }
+
+        //}
+        //private void UpdateLocation(Location location)
+        //{
+        //    currentLocation = $"{location.Latitude}, {location.Longitude}";
+        //    _routeCoordinates.Add(location);
+
+        //    CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(50));
+
+        //    AddPolylinesToMap();
+        //}
+
+        
+        //private async void StartLocationUpdates()   
+        //{
+        //    try
+        //    {
+        //        var location = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(10)));
+        //        if (location != null)
+        //        {
+        //            Debug.WriteLine($"Current location222: {location.Latitude}, {location.Longitude}");
+        //            _routeCoordinates.Add(location);
+        //            CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(50));
+        //            Mappy.MoveToRegion(CurrentMapSpan);
+
+        //            AddPolylinesToMap();
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Debug.WriteLine($"Geolocation failed: {ex.Message}");
+        //    }
+        //}
+
+
+        //private void AddPolylinesToMap()
+        //{
+        //    if (_routeCoordinates.Count < 2) {
+        //        return;
+        //    }
+            
+
+        //    Polyline polyline = new Polyline
+        //    {
+        //        StrokeColor = Colors.Blue,
+        //        StrokeWidth = 5,
+        //    };
+
+        //    foreach (var coord in _routeCoordinates) {
+        //        Debug.WriteLine("LINES" + coord);
+        //        polyline.Geopath.Add(coord);
+        //    }
+           
+        //    //Mappy.MapElements.Add(polyline);
+        //    //todo: het heeft de lines wel alleen maakt er geen polyline van op de map. maar de rest is er  
+        //    MainThread.InvokeOnMainThreadAsync(() =>
+        //        {
+        //            Mappy.MapElements.Add(polyline);
+                
+        //        });
+        //}
 
         [RelayCommand]
         public async Task GoToMainPage()

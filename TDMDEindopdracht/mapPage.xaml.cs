@@ -7,9 +7,10 @@ namespace TDMDEindopdracht;
 
 public partial class mapPage : ContentPage
 {
-	public mapPage()
+	public mapPage(MapViewModel viewModel)
 	{
 		InitializeComponent();
+        BindingContext = viewModel;
     }
 
     //LET OP, als deze code in een andere klasse wordt gezet moet je op letten op sychronisatie. 
