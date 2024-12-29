@@ -1,3 +1,4 @@
+using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
 using TDMDEindopdracht.Domain.Services;
 
@@ -12,6 +13,7 @@ namespace TDMDEindopdracht
             builder
                 .UseMauiApp<App>()
                 .UseMauiMaps()
+                .UseMauiCommunityToolkit()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

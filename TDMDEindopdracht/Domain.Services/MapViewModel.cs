@@ -10,6 +10,12 @@ using Microsoft.Maui.Maps;
 using Microsoft.Maui.Controls.Maps;
 using System.Diagnostics;
 using System.Collections.ObjectModel;
+using Microsoft.Maui.Controls;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Reflection.Metadata;
+using Microsoft.Maui.Devices.Sensors;
+using static System.Net.Mime.MediaTypeNames;
+using CommunityToolkit.Maui.Alerts;
 
 namespace TDMDEindopdracht.Domain.Services
 {
@@ -20,6 +26,7 @@ namespace TDMDEindopdracht.Domain.Services
         //private Map mappy;
 
         private IGeolocation _geolocation;
+        private Location? _home;
 
         //private readonly List<Location> _routeCoordinates = new();
 
@@ -40,6 +47,7 @@ namespace TDMDEindopdracht.Domain.Services
 
             //_geolocation.LocationChanged += OnLocationChanged;
             StartLocationUpdates();
+
         }
 
         private async void StartLocationUpdates()
@@ -55,6 +63,7 @@ namespace TDMDEindopdracht.Domain.Services
 
                         CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(50));
                         //UpdateRoute(location);
+                        CheckHome(location);
                     }
                     Thread.Sleep(1000);
                 }
@@ -198,6 +207,35 @@ namespace TDMDEindopdracht.Domain.Services
             await Shell.Current.GoToAsync("//MainPage");
         }
 
+        [RelayCommand]
+        public async Task StartRoute()
+        {
+            try
+            {
+                 _home = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best));
+                if (_home != null)
+                {
+                    Debug.WriteLine($"Locatie: {_home.Latitude}, {_home.Longitude}");
+
+                    //CurrentMapSpan = MapSpan.FromCenterAndRadius(_home, Distance.FromMeters(50));
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"{ex.Message}");
+            }
+            
+
+        }
+
+        public void CheckHome(Location location)
+        {
+            double distance = Location.CalculateDistance(_home, location, DistanceUnits.Kilometers);
+            if (distance < 0.025)
+            {
+                var toast = Toast.Make("u are almost home", CommunityToolkit.Maui.Core.ToastDuration.Short).Show();
+            }
+        }
 
 
      
