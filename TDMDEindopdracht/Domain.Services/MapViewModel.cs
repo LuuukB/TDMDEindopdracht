@@ -10,6 +10,8 @@ using Microsoft.Maui.Maps;
 using Microsoft.Maui.Controls.Maps;
 using System.Diagnostics;
 using System.Collections.ObjectModel;
+using Microsoft.Maui.Devices.Sensors;
+using System.Timers;
 
 namespace TDMDEindopdracht.Domain.Services
 {
@@ -18,8 +20,15 @@ namespace TDMDEindopdracht.Domain.Services
 
         //[ObservableProperty]
         //private Map mappy;
+        [ObservableProperty]
+        private bool _isStartEnabled = true;
+        [ObservableProperty]
+        private bool _isStopEnabled = false;
 
         private IGeolocation _geolocation;
+
+
+        private System.Timers.Timer? _locationTimer;
 
         //private readonly List<Location> _routeCoordinates = new();
 
@@ -39,159 +48,159 @@ namespace TDMDEindopdracht.Domain.Services
             _geolocation = geolocation;
 
             //_geolocation.LocationChanged += OnLocationChanged;
-            StartLocationUpdates();
+            //StartLocationUpdates();
         }
 
-        private async void StartLocationUpdates()
+        //private void OnLocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
+        //{
+        //    if (e.Location != null)
+        //    {
+        //        CurrentMapSpan = MapSpan.FromCenterAndRadius(e.Location, Distance.FromMeters(50));
+        //        Debug.WriteLine($"LocatieTESTTTTTTTTTTTTT: {e.Location.Latitude}, {e.Location.Longitude}");
+
+        //        MainThread.BeginInvokeOnMainThread(() =>
+        //        {
+        //            UpdateRoute(e.Location);
+        //        });
+        //    }
+        //}
+
+       
+        [RelayCommand]
+        public void RouteStarting() 
         {
-            try
+            Debug.WriteLine("starting route/timer");
+            _locationTimer = new System.Timers.Timer(1000); 
+            _locationTimer.Elapsed += OnTimedEvent;
+            _locationTimer.AutoReset = true;
+            _locationTimer.Start();
+            IsStartEnabled = false;
+            IsStopEnabled = true;
+        }
+
+        [RelayCommand]
+        public void RouteStop()
+        {
+            Debug.WriteLine("stopping route/timer");
+
+            if (_locationTimer != null)
             {
-                while (true)
+                _locationTimer.Stop();
+                _locationTimer.Dispose();
+                _locationTimer = null;
+                IsStartEnabled = true;
+                IsStopEnabled = false;
+            }
+        }
+        private void OnTimedEvent(object? sender, ElapsedEventArgs e)
+        {
+            Task.Run(async () =>
+            {
+                try
                 {
                     var location = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best));
                     if (location != null)
-                    {
-                        Debug.WriteLine($"Locatie: {location.Latitude}, {location.Longitude}");
+                    { 
+                        Debug.WriteLine($"LocatiE: { location}");
+                        CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(10));
 
-                        CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(50));
-                        //UpdateRoute(location);
+                        UpdateRoute(location);
                     }
-                    Thread.Sleep(1000);
                 }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
-            }
-        }
-        private void UpdateRoute(Location location)
-        {
-
-            //MainThread.BeginInvokeOnMainThread(() =>
-            //{
-
-            //    if (MapElements.FirstOrDefault(e => e is Polyline) is Polyline polyline)
-            //    {
-
-            //        polyline.Geopath.Add(location);
-            //    }
-            //    else
-            //    {
-
-            //        var newPolyline = new Polyline
-            //        {
-            //            StrokeColor = Colors.Blue,
-            //            StrokeWidth = 5
-            //        };
-            //        newPolyline.Geopath.Add(location);
-            //        MapElements.Add(newPolyline);
-            //    }
-            //});
-
-            var polyline = new Polyline
-            {
-                StrokeColor = Colors.Blue,
-                StrokeWidth = 5
-            };
-
-            foreach (var coord in MapElements.OfType<Polyline>().SelectMany(p => p.Geopath))
-            {
-                polyline.Geopath.Add(coord);
-            }
-
-            polyline.Geopath.Add(location);
-            //todo mainThread invoke zorgt voor de crash
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                MapElements.Clear();
-                MapElements.Add(polyline);
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
+                }
             });
         }
-        //private void OnLocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
-        //{
-
-        //    //if (e?.Location != null)
-        //    //{
-        //    //    Debug.WriteLine("Location changed");
-        //    //    UpdateLocation(e.Location);
-        //    //}
-        //    if (e?.Location != null)
-        //    {
-        //        Debug.WriteLine("in LocaionCHANGEEDddddddddddddddddddddddddddddddddd");
-        //        CurrentLocation = $"{e.Location.Latitude}, {e.Location.Longitude}";
 
 
-        //        var newLocation = new Location(e.Location.Latitude, e.Location.Longitude);
-        //        _routeCoordinates.Add(newLocation);
 
 
-        //        CurrentMapSpan = MapSpan.FromCenterAndRadius(newLocation, Distance.FromMeters(50));
-        //        Mappy.MoveToRegion(CurrentMapSpan);
+       
 
-        //        AddPolylinesToMap();
-        //    }
+        private void UpdateRoute(Location location)
+        {
+             Polyline polyline = new Polyline
+             {
+                StrokeColor = Colors.Blue,
+                StrokeWidth = 5
 
-        //}
-        //private void UpdateLocation(Location location)
-        //{
-        //    currentLocation = $"{location.Latitude}, {location.Longitude}";
-        //    _routeCoordinates.Add(location);
+             };
 
-        //    CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(50));
-
-        //    AddPolylinesToMap();
-        //}
-
-        
-        //private async void StartLocationUpdates()   
-        //{
-        //    try
-        //    {
-        //        var location = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(10)));
-        //        if (location != null)
-        //        {
-        //            Debug.WriteLine($"Current location222: {location.Latitude}, {location.Longitude}");
-        //            _routeCoordinates.Add(location);
-        //            CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(50));
-        //            Mappy.MoveToRegion(CurrentMapSpan);
-
-        //            AddPolylinesToMap();
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Debug.WriteLine($"Geolocation failed: {ex.Message}");
-        //    }
-        //}
-
-
-        //private void AddPolylinesToMap()
-        //{
-        //    if (_routeCoordinates.Count < 2) {
-        //        return;
-        //    }
+            MapElements.Add(polyline);
+          
+            polyline.Geopath.Add(location);
+            
             
 
-        //    Polyline polyline = new Polyline
+            Debug.WriteLine(MapElements + "mapelementen");
+                Debug.WriteLine($"Route bijgewerkt: {location.Latitude}, {location.Longitude}");
+           
+
+            //if (MapElements.FirstOrDefault(e => e is Polyline) is not Polyline polyline)
+            //{
+
+            //    polyline = new Polyline
+            //    {
+            //        StrokeColor = Colors.Blue,
+            //        StrokeWidth = 5
+            //    };
+            //    MapElements.Add(polyline);
+            //}
+
+
+            //polyline.Geopath.Add(location);
+        }
+
+        //private void UpdateRoute(Location location)
+        //{
+
+        //MainThread.BeginInvokeOnMainThread(() =>
+        //{
+
+        //    if (MapElements.FirstOrDefault(e => e is Polyline) is Polyline polyline)
+        //    {
+
+        //        polyline.Geopath.Add(location);
+        //    }
+        //    else
+        //    {
+
+        //        var newPolyline = new Polyline
+        //        {
+        //            StrokeColor = Colors.Blue,
+        //            StrokeWidth = 5
+        //        };
+        //        newPolyline.Geopath.Add(location);
+        //        MapElements.Add(newPolyline);
+        //    }
+        //});
+
+        //    var polyline = new Polyline
         //    {
         //        StrokeColor = Colors.Blue,
-        //        StrokeWidth = 5,
+        //        StrokeWidth = 5
         //    };
 
-        //    foreach (var coord in _routeCoordinates) {
-        //        Debug.WriteLine("LINES" + coord);
+        //    foreach (var coord in MapElements.OfType<Polyline>().SelectMany(p => p.Geopath))
+        //    {
         //        polyline.Geopath.Add(coord);
         //    }
-           
-        //    //Mappy.MapElements.Add(polyline);
-        //    //todo: het heeft de lines wel alleen maakt er geen polyline van op de map. maar de rest is er  
-        //    MainThread.InvokeOnMainThreadAsync(() =>
-        //        {
-        //            Mappy.MapElements.Add(polyline);
-                
-        //        });
-        //}
 
+        //    polyline.Geopath.Add(location);
+        //    //todo mainThread invoke zorgt voor de crash
+        //    MainThread.BeginInvokeOnMainThread(() =>
+        //    {
+        //        MapElements.Clear();
+        //        MapElements.Add(polyline);
+        //    });
+        //}
+        
+
+
+        
+       
         [RelayCommand]
         public async Task GoToMainPage()
         {

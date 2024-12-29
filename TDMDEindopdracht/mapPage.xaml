@@ -35,6 +35,8 @@
                     x:Name="StartRouteBtn"
                     Text="Start a route"
                     Margin="5"
+                    Command="{Binding RouteStartingCommand}"
+                    IsEnabled="{Binding IsStartEnabled}"
                     BorderColor="Black"
                     BorderWidth="2"
                     BackgroundColor="#28A745"/>
@@ -43,6 +45,8 @@
                     x:Name="StopRouteBtn"
                     Text="Stop the route"
                     Margin="5"
+                    Command="{Binding RouteStopCommand}"
+                    IsEnabled="{Binding IsStopEnabled}"
                     BorderColor="Black"
                     BorderWidth="2"
                     BackgroundColor="#28A745"/>
