@@ -31,6 +31,8 @@ namespace TDMDEindopdracht.Domain.Services
 
         [ObservableProperty] private ObservableCollection<MapElement> _mapElements = new();
 
+        private List<Location> _locationCache = [];
+
 
         [ObservableProperty] public MapSpan _currentMapSpan;
 
@@ -101,13 +103,26 @@ namespace TDMDEindopdracht.Domain.Services
         {
             Debug.WriteLine("Running {0} at {1}.", nameof(UpdateRoute), DateTime.Now.ToShortTimeString());
 
-            MapElements = [CreatePolyLineOfLocations(location)];
+            ProcessNewLocation(location);
+
+            // Alleen tekenen als er meer dan 2 punten zijn. Anders heb je natuurlijk geen lijn!
+            if (_locationCache.Count >= 2)
+            {
+                MapElements = [CreatePolyLineOfLocations(_locationCache)];
+            }
+
             Debug.WriteLine("Added to {0}.", args: nameof(MapElements));
 
             Debug.WriteLine($"Route bijgewerkt: {location.Latitude}, {location.Longitude}");
         }
 
-        private Polyline CreatePolyLineOfLocations(Location location)
+        private void ProcessNewLocation(Location location)
+        {
+            // TODO: Niet toevoegen als hij te dichtbij is bij de vorige locatie! En misschien andere logica toevoegen weet niet wat jullie willen.
+            _locationCache.Add(location);
+        }
+
+        private Polyline CreatePolyLineOfLocations(IEnumerable<Location> locations)
         {
             Debug.WriteLine("Constructing {0}", args: nameof(Polyline));
             Polyline polyline = new Polyline
@@ -115,14 +130,11 @@ namespace TDMDEindopdracht.Domain.Services
                 StrokeColor = Colors.Red,
                 StrokeWidth = 12,
             };
-
-            // Test geopath.
-            Location[] locations = [new(0D, 0D), new(60, 60), new(50D, 50D), new(10, 10)];
+            
             Debug.WriteLine("Adding to {0}.", args: nameof(polyline.Geopath));
             foreach (var loc in locations)
             {
                 polyline.Geopath.Add(loc);
-                polyline.Add(loc);
             }
 
             return polyline;
