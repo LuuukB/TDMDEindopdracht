@@ -1,10 +1,4 @@
 ﻿using Microsoft.Maui.Controls.Maps;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Maui.Maps;
 using Microsoft.Maui.Controls.Maps;
 
@@ -19,6 +13,8 @@ namespace TDMDEindopdracht.Domain.Services
                 typeof(ICollection<MapElement>),
                 typeof(BindableMap),
                 null,
+
+                // Runt alleen op '= new()', niet op Add() of Clear()!!!
                 propertyChanged: (b, _, n) =>
                 {
                     if (b is BindableMap map)

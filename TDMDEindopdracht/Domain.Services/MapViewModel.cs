@@ -100,22 +100,32 @@ namespace TDMDEindopdracht.Domain.Services
         private void UpdateRoute(Location location)
         {
             Debug.WriteLine("Running {0} at {1}.", nameof(UpdateRoute), DateTime.Now.ToShortTimeString());
+
+            MapElements = [CreatePolyLineOfLocations(location)];
+            Debug.WriteLine("Added to {0}.", args: nameof(MapElements));
+
+            Debug.WriteLine($"Route bijgewerkt: {location.Latitude}, {location.Longitude}");
+        }
+
+        private Polyline CreatePolyLineOfLocations(Location location)
+        {
             Debug.WriteLine("Constructing {0}", args: nameof(Polyline));
             Polyline polyline = new Polyline
             {
-                StrokeColor = Colors.Blue,
-                StrokeWidth = 5
+                StrokeColor = Colors.Red,
+                StrokeWidth = 12,
             };
 
             // Test geopath.
             Location[] locations = [new(0D, 0D), new(60, 60), new(50D, 50D), new(10, 10)];
             Debug.WriteLine("Adding to {0}.", args: nameof(polyline.Geopath));
-            foreach (var loc in locations) polyline.Geopath.Add(loc);
+            foreach (var loc in locations)
+            {
+                polyline.Geopath.Add(loc);
+                polyline.Add(loc);
+            }
 
-            Debug.WriteLine("Adding to {0}.", args: nameof(MapElements));
-            MainThread.InvokeOnMainThreadAsync(() => MapElements.Add(polyline));
-
-            Debug.WriteLine($"Route bijgewerkt: {location.Latitude}, {location.Longitude}");
+            return polyline;
         }
 
         [RelayCommand]
