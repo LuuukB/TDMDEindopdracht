@@ -29,10 +29,10 @@ namespace TDMDEindopdracht.Domain.Services
 
         //private readonly List<Location> _routeCoordinates = new();
 
-        [ObservableProperty] private ObservableCollection<MapElement> mapElements = new();
+        [ObservableProperty] private ObservableCollection<MapElement> _mapElements = new();
 
 
-        [ObservableProperty] public MapSpan currentMapSpan;
+        [ObservableProperty] public MapSpan _currentMapSpan;
 
         //[ObservableProperty]
         //public string currentLocation;
@@ -107,8 +107,10 @@ namespace TDMDEindopdracht.Domain.Services
                 StrokeWidth = 5
             };
 
+            // Test geopath.
+            Location[] locations = [new(0D, 0D), new(60, 60), new(50D, 50D), new(10, 10)];
             Debug.WriteLine("Adding to {0}.", args: nameof(polyline.Geopath));
-            polyline.Geopath.Add(location);
+            foreach (var loc in locations) polyline.Geopath.Add(loc);
 
             Debug.WriteLine("Adding to {0}.", args: nameof(MapElements));
             MainThread.InvokeOnMainThreadAsync(() => MapElements.Add(polyline));
