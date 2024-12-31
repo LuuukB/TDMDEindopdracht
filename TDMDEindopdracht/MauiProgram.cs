@@ -12,6 +12,7 @@ namespace TDMDEindopdracht
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseMauiMaps()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -19,23 +20,21 @@ namespace TDMDEindopdracht
                 });
 
             builder.Services.AddSingleton<IGeolocation>(Geolocation.Default);
-            builder.Services.AddSingleton<IMap>(Map.Default);
+    
 
-            builder.Services.AddTransient<ViewModel>();
 
-#if DEBUG
-            builder.Logging.AddDebug();
-#endif
-            
+            builder.Services.AddSingleton<ViewModel>();
             builder.Services.AddSingleton<MainPage>(s => new MainPage() 
             {
                 BindingContext = s.GetRequiredService<ViewModel>()
             });
-            builder.Services.AddTransient<MapViewModel>();
-            builder.Services.AddSingleton<mapPage>(s => new mapPage() 
-            {
-                BindingContext = s.GetRequiredService<MapViewModel>()
-            });
+            builder.Services.AddSingleton<MapViewModel>();
+            builder.Services.AddSingleton<mapPage>(s => new mapPage(s.GetRequiredService<MapViewModel>()));
+            
+#if DEBUG
+            builder.Logging.AddDebug();
+#endif
+            
 
             string dbPath = Path.Combine(FileSystem.AppDataDirectory, "route.db");
 

@@ -4,50 +4,63 @@
              x:Class="TDMDEindopdracht.mapPage"
              xmlns:viewmodel="clr-namespace:TDMDEindopdracht.Domain.Services"
              x:DataType="viewmodel:MapViewModel"
-             BackgroundColor="LightGreen">
+             BackgroundColor="LightGreen"
+             xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps"
+             xmlns:custom="clr-namespace:TDMDEindopdracht.Domain.Services">
     
-    <VerticalStackLayout
-         Padding="30,0">
+<Grid>
+    
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>   
+        </Grid.RowDefinitions>
 
-        <Label
-            Text="StraGaan"
-            Style="{StaticResource Headline}"
-            FontSize="Header"
-            TextColor="White"
-            HorizontalOptions="Fill"
-            BackgroundColor="Green"/>
-
-        <Button
-            x:Name="GoBackBtn"
-            Text="Go back"
-            HorizontalOptions="Start"
-            BorderColor="Black"
-            Command="{Binding GoToMainPageCommand}"
-            BorderWidth="2"
-            BackgroundColor="#28A745"
-            CornerRadius="45"
-            HeightRequest="85"
-            WidthRequest="85"
-            Margin="2"/>
-
-        <HorizontalStackLayout HorizontalOptions="Center">
-
+      
+        <VerticalStackLayout Padding="30,0" Grid.Row="0">
             <Button
-                x:Name="StartRouteBtn"
-                Text="Start a route"
-                Margin="5"
+                x:Name="GoBackBtn"
+                Text="Go back"
+                Command="{Binding GoToMainPageCommand}"
+                HorizontalOptions="Start"
                 BorderColor="Black"
                 BorderWidth="2"
-                BackgroundColor="#28A745"/>
+                BackgroundColor="#28A745"
+                CornerRadius="45"
+                HeightRequest="85"
+                WidthRequest="85"
+                Margin="2"/>
 
-            <Button
-                x:Name="StopRouteBtn"
-                Text="Stop the route"
-                Margin="5"
-                BorderColor="Black"
-                BorderWidth="2"
-                BackgroundColor="#28A745"/>
-        </HorizontalStackLayout>
+            <HorizontalStackLayout HorizontalOptions="Center">
+                <Button
+                    x:Name="StartRouteBtn"
+                    Text="Start a route"
+                    Margin="5"
+                    Command="{Binding RouteStartingCommand}"
+                    IsEnabled="{Binding IsStartEnabled}"
+                    BorderColor="Black"
+                    BorderWidth="2"
+                    BackgroundColor="#28A745"/>
 
-    </VerticalStackLayout>
+                <Button
+                    x:Name="StopRouteBtn"
+                    Text="Stop the route"
+                    Margin="5"
+                    Command="{Binding RouteStopCommand}"
+                    IsEnabled="{Binding IsStopEnabled}"
+                    BorderColor="Black"
+                    BorderWidth="2"
+                    BackgroundColor="#28A745"/>
+              
+
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+
+        <custom:BindableMap 
+            x:Name="MapView"
+            Grid.Row="1"
+            MvvmMapElements="{Binding MapElements}"
+            VisibleRegion="{Binding CurrentMapSpan}"
+            IsShowingUser="True"
+            MapType="Street" />
+    </Grid>
 </ContentPage>
