@@ -1,10 +1,4 @@
 ﻿using Microsoft.Maui.Controls.Maps;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Maui.Maps;
 using Microsoft.Maui.Controls.Maps;
 
@@ -13,13 +7,25 @@ namespace TDMDEindopdracht.Domain.Services
 {
     public partial class BindableMap : Microsoft.Maui.Controls.Maps.Map
     {
-        public static readonly BindableProperty MapElementsProperty =
+        public static readonly BindableProperty MvvmMapElementsProperty =
             BindableProperty.Create(
-                nameof(MapElements),
-                typeof(ObservableCollection<MapElement>),
+                nameof(MvvmMapElements),
+                typeof(ICollection<MapElement>),
                 typeof(BindableMap),
-                default(ObservableCollection<MapElement>),
-                propertyChanged: OnMapElementsChanged);
+                null,
+
+                // Runt alleen op '= new()', niet op Add() of Clear()!!!
+                propertyChanged: (b, _, n) =>
+                {
+                    if (b is BindableMap map)
+                    {
+                        map.MapElements.Clear();
+                        foreach (var element in (IEnumerable<MapElement>)n)
+                        {
+                            map.MapElements.Add(element);
+                        }
+                    }
+                });
 
         public static readonly BindableProperty VisibleRegionProperty =
           BindableProperty.Create(
@@ -30,10 +36,10 @@ namespace TDMDEindopdracht.Domain.Services
               propertyChanged: OnVisibleRegionChanged);
 
 
-        public ObservableCollection<MapElement> MapElements
+        public ICollection<MapElement> MvvmMapElements
         {
-            get => (ObservableCollection<MapElement>)GetValue(MapElementsProperty);
-            set => SetValue(MapElementsProperty, value);
+            get => (ICollection<MapElement>)GetValue(MvvmMapElementsProperty);
+            set => SetValue(MvvmMapElementsProperty, value);
         }
 
         public MapSpan VisibleRegion
@@ -49,42 +55,7 @@ namespace TDMDEindopdracht.Domain.Services
                 map.MoveToRegion(newRegion);
             }
         }
-
-        private static void OnMapElementsChanged(BindableObject bindable, Object oldValue, Object newValue) 
-        {
-            if (bindable is BindableMap map && newValue is ObservableCollection<MapElement> newElements)
-            {
-                map.MapElements.Clear();
-                foreach (var element in newElements)
-                {
-                    map.MapElements.Add(element);
-                }
-
-                newElements.CollectionChanged += (s, e) =>
-                {
-                    if (e.NewItems != null)
-                    {
-                        foreach (MapElement item in e.NewItems)
-                        {
-                            map.MapElements.Add(item);
-                        }
-                    }
-
-                    if (e.OldItems != null)
-                    {
-                        foreach (MapElement item in e.OldItems)
-                        {
-                            map.MapElements.Remove(item);
-                        }
-                    }
-                };
-            }
-        }
     }
-
-
-
-
 }
     
 

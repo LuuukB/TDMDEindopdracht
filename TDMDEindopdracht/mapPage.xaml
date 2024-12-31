@@ -58,7 +58,7 @@
         <custom:BindableMap 
             x:Name="MapView"
             Grid.Row="1"
-            MapElements="{Binding MapElements}"
+            MvvmMapElements="{Binding MapElements}"
             VisibleRegion="{Binding CurrentMapSpan}"
             IsShowingUser="True"
             MapType="Street" />
