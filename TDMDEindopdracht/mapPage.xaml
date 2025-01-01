@@ -30,6 +30,12 @@
                 WidthRequest="85"
                 Margin="2"/>
 
+            <Entry
+                Text="{Binding EntryText}"
+                Placeholder="fill in a name"
+                HorizontalOptions="End"/>
+
+
             <HorizontalStackLayout HorizontalOptions="Center">
                 <Button
                     x:Name="StartRouteBtn"

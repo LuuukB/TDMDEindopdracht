@@ -1,9 +1,9 @@
-﻿using SQLite;
+﻿ using SQLite;
 using TDMDEindopdracht.Domain.Model;
 
 namespace TDMDEindopdracht.Infrastructure
 {
-    public class DatabaseComunicator
+    public class DatabaseComunicator : IDatabaseCommunicator
     {
         string _dbPath;
         private SQLiteConnection connection;

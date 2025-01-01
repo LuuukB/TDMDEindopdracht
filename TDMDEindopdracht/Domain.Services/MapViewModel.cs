@@ -12,6 +12,8 @@ using System.Diagnostics;
 using System.Collections.ObjectModel;
 using Microsoft.Maui.Devices.Sensors;
 using System.Timers;
+using TDMDEindopdracht.Domain.Model;
+using CommunityToolkit.Maui.Alerts;
 
 namespace TDMDEindopdracht.Domain.Services
 {
@@ -21,10 +23,10 @@ namespace TDMDEindopdracht.Domain.Services
         //private Map mappy;
         [ObservableProperty] private bool _isStartEnabled = true;
         [ObservableProperty] private bool _isStopEnabled = false;
+        [ObservableProperty] private string _entryText;
 
         private readonly IGeolocation _geolocation;
-
-
+        private RouteHandler _routeHandler;
         private System.Timers.Timer? _locationTimer;
 
         //private readonly List<Location> _routeCoordinates = new();
@@ -39,9 +41,10 @@ namespace TDMDEindopdracht.Domain.Services
         //[ObservableProperty]
         //public string currentLocation;
 
-        public MapViewModel(IGeolocation geolocation)
+        public MapViewModel(IGeolocation geolocation, RouteHandler routeHandler)
         {
             _geolocation = geolocation;
+            _routeHandler = routeHandler;
         }
 
         [RelayCommand]
@@ -54,11 +57,25 @@ namespace TDMDEindopdracht.Domain.Services
             _locationTimer.Start();
             IsStartEnabled = false;
             IsStopEnabled = true;
+
+            _routeHandler.CreateRoute();
         }
 
         [RelayCommand]
         public void RouteStop()
         {
+
+            if (EntryText.Length == 0)
+            { var noName = Toast.Make("U need to fill in a name", CommunityToolkit.Maui.Core.ToastDuration.Short).Show();
+                return; }
+
+            if (EntryText.StartsWith(" "))
+            { var startsWithSpace = Toast.Make("The name of the runs starts with a space", CommunityToolkit.Maui.Core.ToastDuration.Short).Show();
+                return; }
+
+            // geeft voor nu als afstand standaard 1000 mee. dit moet nog even aangepast worden naar de daadwerkelijk gelopen afstand
+            _routeHandler.StopRoute(1000, EntryText);
+
             Debug.WriteLine("stopping route/timer");
 
             if (_locationTimer != null)

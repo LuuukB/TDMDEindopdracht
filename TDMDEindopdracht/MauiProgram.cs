@@ -1,4 +1,6 @@
+using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
+using TDMDEindopdracht.Domain.Model;
 using TDMDEindopdracht.Domain.Services;
 using TDMDEindopdracht.Infrastructure;
 
@@ -12,6 +14,7 @@ namespace TDMDEindopdracht
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseMauiCommunityToolkit()
                 .UseMauiMaps()
                 .ConfigureFonts(fonts =>
                 {
@@ -24,6 +27,7 @@ namespace TDMDEindopdracht
 
 
             builder.Services.AddSingleton<ViewModel>();
+            builder.Services.AddTransient<RouteHandler>();
             builder.Services.AddSingleton<MainPage>(s => new MainPage() 
             {
                 BindingContext = s.GetRequiredService<ViewModel>()
