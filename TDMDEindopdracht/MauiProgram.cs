@@ -28,6 +28,7 @@ namespace TDMDEindopdracht
 
             builder.Services.AddSingleton<ViewModel>();
             builder.Services.AddTransient<RouteHandler>();
+            builder.Services.AddTransient<IDatabaseCommunicator, DatabaseComunicator>();
             builder.Services.AddSingleton<MainPage>(s => new MainPage() 
             {
                 BindingContext = s.GetRequiredService<ViewModel>()

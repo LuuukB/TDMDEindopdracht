@@ -14,12 +14,11 @@ namespace TDMDEindopdracht.Domain.Services
 {
     public partial class ViewModel : ObservableObject
     {
-        IGeolocation geolocation;
+        
         
         private IDatabaseCommunicator _communicator;
-        public ViewModel(IGeolocation geolocation, IDatabaseCommunicator communicator)
+        public ViewModel(IDatabaseCommunicator communicator)
         {
-            this.geolocation = geolocation;
             _communicator = communicator;
             AddRoutes();
         }
@@ -38,11 +37,6 @@ namespace TDMDEindopdracht.Domain.Services
             SelectedAveradgeSpeed = value?.AveradgeSpeed.ToString() ?? string.Empty;
         }
 
-        [RelayCommand]
-        public async Task GetCurrentLocation()
-        {
-
-        }
 
         [RelayCommand]
         private async Task ViewMap()
