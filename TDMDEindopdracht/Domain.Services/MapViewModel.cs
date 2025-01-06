@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Collections.ObjectModel;
 using Microsoft.Maui.Devices.Sensors;
 using System.Timers;
+using System.Diagnostics.Metrics;
 
 namespace TDMDEindopdracht.Domain.Services
 {
@@ -42,6 +43,25 @@ namespace TDMDEindopdracht.Domain.Services
         public MapViewModel(IGeolocation geolocation)
         {
             _geolocation = geolocation;
+            //todo: beter gezegd de currentmapspan moet naar user toe op het moment dat de map word gemaakt.
+            InitializeMap();
+        }
+
+        private async void InitializeMap()
+        {
+            try
+            {
+                var location = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best));
+
+                if (location is not null)
+                {
+                    CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(10));
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
+            }
         }
 
         [RelayCommand]
@@ -55,12 +75,12 @@ namespace TDMDEindopdracht.Domain.Services
             IsStartEnabled = false;
             IsStopEnabled = true;
         }
-
+        
         [RelayCommand]
         public void RouteStop()
         {
             Debug.WriteLine("stopping route/timer");
-
+         
             if (_locationTimer != null)
             {
                 _locationTimer.Stop();
@@ -68,6 +88,8 @@ namespace TDMDEindopdracht.Domain.Services
                 _locationTimer = null;
                 IsStartEnabled = true;
                 IsStopEnabled = false;
+                MapElements.Clear();
+                //todo eerst route opslaan voordat je de lijnen weg haalt idk wat we nog echt willen gaan doen.
             }
         }
 
@@ -88,7 +110,7 @@ namespace TDMDEindopdracht.Domain.Services
                 if (location is not null)
                 {
                     Debug.WriteLine("Location: {0}", location);
-                    // CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(10));
+                     CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(10));
 
                     UpdateRoute(location);
                 }
@@ -118,8 +140,17 @@ namespace TDMDEindopdracht.Domain.Services
 
         private void ProcessNewLocation(Location location)
         {
-            // TODO: Niet toevoegen als hij te dichtbij is bij de vorige locatie! En misschien andere logica toevoegen weet niet wat jullie willen.
-            _locationCache.Add(location);
+            // TODO: Niet toevoegen als hij te dichtbij is bij de vorige locatie! En misschien andere logica toevoegen.
+            const double minDistance = 0.01;
+            if (_locationCache.Count == 0 || location.CalculateDistance(_locationCache.Last(), DistanceUnits.Kilometers) >= minDistance)
+            {
+                _locationCache.Add(location);
+            }
+            else 
+            {
+                Debug.WriteLine($"Locatie te dicht bij de vorige locatie: {location.Latitude}, {location.Longitude}");
+            }
+           
         }
 
         private Polyline CreatePolyLineOfLocations(IEnumerable<Location> locations)
@@ -130,7 +161,7 @@ namespace TDMDEindopdracht.Domain.Services
                 StrokeColor = Colors.Red,
                 StrokeWidth = 12,
             };
-            
+
             Debug.WriteLine("Adding to {0}.", args: nameof(polyline.Geopath));
             foreach (var loc in locations)
             {
