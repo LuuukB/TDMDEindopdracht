@@ -1,5 +1,6 @@
 using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
+using Shiny;
 using TDMDEindopdracht.Domain.Model;
 using TDMDEindopdracht.Domain.Services;
 using TDMDEindopdracht.Infrastructure;
@@ -16,6 +17,7 @@ namespace TDMDEindopdracht
                 .UseMauiApp<App>()
                 .UseMauiCommunityToolkit()
                 .UseMauiMaps()
+                .UseShiny()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -39,12 +41,14 @@ namespace TDMDEindopdracht
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
-            
+            //builder.Services.AddNotifications();
+
 
             string dbPath = Path.Combine(FileSystem.AppDataDirectory, "route.db");
 
             builder.Services.AddSingleton(s =>
             ActivatorUtilities.CreateInstance<DatabaseComunicator>(s, dbPath));
+
 
             return builder.Build();
         }

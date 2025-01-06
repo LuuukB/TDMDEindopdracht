@@ -15,6 +15,9 @@ using System.Timers;
 using TDMDEindopdracht.Domain.Model;
 using CommunityToolkit.Maui.Alerts;
 using System.Diagnostics.Metrics;
+using Shiny.Notifications;
+using Shiny;
+
 
 namespace TDMDEindopdracht.Domain.Services
 {
@@ -25,7 +28,9 @@ namespace TDMDEindopdracht.Domain.Services
         [ObservableProperty] private bool _isStartEnabled = true;
         [ObservableProperty] private bool _isStopEnabled = false;
         [ObservableProperty] private string _entryText;
-        
+
+        private Location? _home;
+
 
         private readonly IGeolocation _geolocation;
         private RouteHandler _routeHandler;
@@ -59,7 +64,7 @@ namespace TDMDEindopdracht.Domain.Services
 
                 if (location is not null)
                 {
-                    CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(10));
+                    CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Microsoft.Maui.Maps.Distance.FromMeters(10));
                 }
             }
             catch (Exception ex)
@@ -128,9 +133,10 @@ namespace TDMDEindopdracht.Domain.Services
                 if (location is not null)
                 {
                     Debug.WriteLine("Location: {0}", location);
-                     CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(10));
+                     CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Microsoft.Maui.Maps.Distance.FromMeters(10));
 
                     UpdateRoute(location);
+                    CheckHome(location);
                 }
             }
             catch (Exception ex)
@@ -187,6 +193,48 @@ namespace TDMDEindopdracht.Domain.Services
             }
 
             return polyline;
+        }
+
+        public async Task SetHome() 
+        {
+            try
+            {
+
+               _home = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best));
+
+                if (_home is not null)
+                {
+                    Debug.WriteLine("Location: {home}", _home); 
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
+            }
+
+
+        }
+
+        public async void CheckHome(Location location)
+        {
+
+            if (_home is null)
+                return;
+
+            var notificationManager = await ShinyHost.Resolve<INotificationManager>();
+            var access = await notificationManager.RequestAccess();
+
+            if (access != AccessState.Available)
+            {
+                Debug.WriteLine("Notificaties zijn niet toegestaan. Geen notificatie verzonden.");
+                return;
+            }
+
+            double distance = Location.CalculateDistance(_home, location, DistanceUnits.Kilometers);
+            if (distance < 0.025)
+            {
+               
+            }
         }
 
         [RelayCommand]
