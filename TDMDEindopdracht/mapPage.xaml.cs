@@ -101,8 +101,5 @@ public partial class mapPage : ContentPage
         }
     }
 
-    private void MapView_BindingContextChanged(object sender, EventArgs e)
-    {
-
-    }
+   
 }
