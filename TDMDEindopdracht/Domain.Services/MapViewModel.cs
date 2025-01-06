@@ -25,6 +25,7 @@ namespace TDMDEindopdracht.Domain.Services
         [ObservableProperty] private bool _isStartEnabled = true;
         [ObservableProperty] private bool _isStopEnabled = false;
         [ObservableProperty] private string _entryText;
+        
 
         private readonly IGeolocation _geolocation;
         private RouteHandler _routeHandler;

@@ -41,26 +41,26 @@
                 <VerticalStackLayout>
                     <!-- Titel van de GroupBox -->
                     <Label Text="Gekozen eerder gelopen route" FontSize="Medium" FontAttributes="Bold" />
-                    <Label Text="{Binding}" FontAttributes="Bold"/>
+                    <Label Text="{Binding SelectedName}" FontAttributes="Bold"/>
                     <!-- Inhoud van de GroupBox -->
                     <VerticalStackLayout Padding="10">
                         <HorizontalStackLayout>
                             <Label Text="Gelopen afstand: " />
+                            <Label Text="{Binding SelectedDistance}"/>
                         </HorizontalStackLayout>
                         <HorizontalStackLayout>
                             <Label Text="Duur van de loop: " />
+                            <Label Text="{Binding SelectedTotalRunTime}"/>
                         </HorizontalStackLayout>
                         <HorizontalStackLayout>
                             <Label Text="Gemmidelde snelheid: " />
-                        </HorizontalStackLayout>
-                        <HorizontalStackLayout>
-                            <Label Text="eventueel iets extra's" />
+                            <Label Text="{Binding SelectedAveradgeSpeed}"/>
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
 
-                    <Picker Title="Gelopen Routes" >
+                    <Picker Title="Gelopen Routes" ItemsSource="{Binding Routes}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedRoute}">
                         <!-- moeten nog items toegevoegd worden aan de Picker -->
-                        
+
                     </Picker>
 
                 </VerticalStackLayout>
