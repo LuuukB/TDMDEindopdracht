@@ -34,7 +34,7 @@ namespace TDMDEindopdracht.Infrastructure
         public void Delete(int id)
         {
             connection = new(_dbPath);
-            connection.Delete(new { Id = id });
+            connection.Delete<Route>(id);
         }
     }
 }
