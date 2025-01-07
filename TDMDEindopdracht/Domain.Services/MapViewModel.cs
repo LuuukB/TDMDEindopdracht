@@ -15,16 +15,17 @@ using System.Timers;
 using TDMDEindopdracht.Domain.Model;
 using CommunityToolkit.Maui.Alerts;
 using System.Diagnostics.Metrics;
-using Shiny.Notifications;
-using Shiny;
+using Plugin.LocalNotification;
+
+
+
 
 
 namespace TDMDEindopdracht.Domain.Services
 {
     public partial class MapViewModel : ObservableObject
     {
-        //[ObservableProperty]
-        //private Map mappy;
+     
         [ObservableProperty] private bool _isStartEnabled = true;
         [ObservableProperty] private bool _isStopEnabled = false;
         [ObservableProperty] private string _entryText;
@@ -36,7 +37,7 @@ namespace TDMDEindopdracht.Domain.Services
         private RouteHandler _routeHandler;
         private System.Timers.Timer? _locationTimer;
 
-        //private readonly List<Location> _routeCoordinates = new();
+   
 
         [ObservableProperty] private ObservableCollection<MapElement> _mapElements = new();
 
@@ -45,13 +46,12 @@ namespace TDMDEindopdracht.Domain.Services
 
         [ObservableProperty] public MapSpan _currentMapSpan;
 
-        //[ObservableProperty]
-        //public string currentLocation;
+       
 
         public MapViewModel(IGeolocation geolocation, RouteHandler routeHandler)
         {
             _geolocation = geolocation;
-            //todo: beter gezegd de currentmapspan moet naar user toe op het moment dat de map word gemaakt.
+       
             InitializeMap();
             _routeHandler = routeHandler;
         }
@@ -111,8 +111,6 @@ namespace TDMDEindopdracht.Domain.Services
                 _locationTimer = null;
                 IsStartEnabled = true;
                 IsStopEnabled = false;
-                MapElements.Clear();
-                //todo eerst route opslaan voordat je de lijnen weg haalt idk wat we nog echt willen gaan doen.
             }
         }
 
@@ -215,26 +213,34 @@ namespace TDMDEindopdracht.Domain.Services
 
         }
 
-        public async void CheckHome(Location location)
+        public void CheckHome(Location location)
         {
 
             if (_home is null)
                 return;
-
-            var notificationManager = await ShinyHost.Resolve<INotificationManager>();
-            var access = await notificationManager.RequestAccess();
-
-            if (access != AccessState.Available)
-            {
-                Debug.WriteLine("Notificaties zijn niet toegestaan. Geen notificatie verzonden.");
-                return;
-            }
-
-            double distance = Location.CalculateDistance(_home, location, DistanceUnits.Kilometers);
+ double distance = Location.CalculateDistance(_home, location, DistanceUnits.Kilometers);
             if (distance < 0.025)
             {
-               
+               var request = new NotificationRequest
+                {   
+                NotificationId = 1,
+                Title = "You are home",
+                Subtitle = "home sweet home",
+                Description = "...............",
+                BadgeNumber = 1,
+                CategoryType = NotificationCategoryType.Alarm
+
+                };
+
+                LocalNotificationCenter.Current.Show(request);
+
             }
+            
+            
+
+        
+
+           
         }
 
         [RelayCommand]
