@@ -31,14 +31,15 @@ namespace TDMDEindopdracht.Domain.Services
         [ObservableProperty] private bool _isStopEnabled = false;
         [ObservableProperty] private string _entryText;
 
-        private Location _home;
+        private Location? _home;
+        private bool _hasLeftHome = false;
+        private const double HomeRadiusMeters = 25.0;
+
 
 
         private readonly IGeolocation _geolocation;
         private RouteHandler _routeHandler;
-        
 
-        
 
         [ObservableProperty] private ObservableCollection<MapElement> _mapElements = new();
 
@@ -63,13 +64,13 @@ namespace TDMDEindopdracht.Domain.Services
             { 
                 try
                 {
-                    SetHome(e.Location);
                     Debug.WriteLine("Location: {0}", e.Location);
                     CurrentMapSpan = MapSpan.FromCenterAndRadius(e.Location, Distance.FromMeters(10));
-
-                    UpdateRoute(e.Location);
+                    SetHome(e.Location); 
                     Debug.WriteLine("Home: ", _home);
+                    UpdateRoute(e.Location);
                     CheckHome(e.Location);
+
                 }
                 catch (Exception ex)
                 {
@@ -80,7 +81,7 @@ namespace TDMDEindopdracht.Domain.Services
 
         private void SetHome(Location location)
         {
-            if (_home != null) 
+            if (_home == null)
             {
                 _home = location;
             }
@@ -131,7 +132,7 @@ namespace TDMDEindopdracht.Domain.Services
         [RelayCommand]
         public void RouteStop()
         {
-            Debug.WriteLine("stopping route");
+           
            
 
             if (string.IsNullOrEmpty(EntryText))
@@ -140,16 +141,19 @@ namespace TDMDEindopdracht.Domain.Services
 
             if (EntryText.StartsWith(" "))
             { var startsWithSpace = Toast.Make("The name of the run starts with a space", CommunityToolkit.Maui.Core.ToastDuration.Short).Show();
-                return; }
+                return; } 
+            Debug.WriteLine("stopping route");
             StopListeningToLocation();
             IsStartEnabled = true;
             IsStopEnabled = false;
-            
 
+            Debug.WriteLine("EntryText text: ", EntryText);
             // geeft voor nu als afstand standaard 1000 mee. dit moet nog even aangepast worden naar de daadwerkelijk gelopen afstand
             _routeHandler.StopRoute(1000, EntryText);
 
-           
+            //todo nieuwe instantie haalt weg bij stop route maar wanneer je nieuwe route start komen allle lijnen weer terug
+
+            MapElements = new ObservableCollection<MapElement>();
             _home = null;
             Debug.WriteLine("stopping route/timer");
          
@@ -220,33 +224,32 @@ namespace TDMDEindopdracht.Domain.Services
         public async void CheckHome(Location location)
         {
 
-            if (_home is null)
-                return;
-                
-            double distance = Location.CalculateDistance(_home, location, DistanceUnits.Kilometers);
-            if (distance < 0.025)
+            if (_home == null) return;
+
+            double distanceInKm = Location.CalculateDistance(_home, location, DistanceUnits.Kilometers);
+            double distanceInMeters = distanceInKm * 1000;
+
+            if (distanceInMeters > HomeRadiusMeters)
             {
-                var check = await CheckPermissionNotification();
-                if (check) {
-                    var request = new NotificationRequest
-                    {
-                        NotificationId = 1,
-                        Title = "You are home",
-                        Subtitle = "home sweet home",
-                        Description = "...............",
-                        BadgeNumber = 1,
-
-                    };
-
-                    await LocalNotificationCenter.Current.Show(request);
-                }
+                _hasLeftHome = true; 
+                Debug.WriteLine("You have left the home geofence.");
             }
-            
-            
+            else if (distanceInMeters <= HomeRadiusMeters && _hasLeftHome)
+            {
+                _hasLeftHome = false;
+                Debug.WriteLine("You have entered the home geofence!");
 
-        
+                var request = new NotificationRequest
+                {
+                    NotificationId = 1,
+                    Title = "Welcome Home",
+                    Description = "You are close to your home!",
+                    BadgeNumber = 1
+                };
 
-           
+                await LocalNotificationCenter.Current.Show(request);
+            }
+    
         }
 
         [RelayCommand]
