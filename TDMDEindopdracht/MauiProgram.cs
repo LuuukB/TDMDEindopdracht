@@ -30,11 +30,17 @@ namespace TDMDEindopdracht
 
             builder.Services.AddSingleton<ViewModel>();
             builder.Services.AddTransient<RouteHandler>();
-            builder.Services.AddTransient<IDatabaseCommunicator, DatabaseComunicator>();
+
+            string dbPath = Path.Combine(FileSystem.AppDataDirectory, "route.db");
+
+            builder.Services.AddSingleton<IDatabaseCommunicator>(s =>
+                new DatabaseComunicator(dbPath));
+
             builder.Services.AddSingleton<MainPage>(s => new MainPage() 
             {
                 BindingContext = s.GetRequiredService<ViewModel>()
             });
+
             builder.Services.AddSingleton<MapViewModel>();
             builder.Services.AddSingleton<mapPage>(s => new mapPage(s.GetRequiredService<MapViewModel>()));
             
@@ -44,10 +50,7 @@ namespace TDMDEindopdracht
         
 
 
-            string dbPath = Path.Combine(FileSystem.AppDataDirectory, "route.db");
-
-            builder.Services.AddSingleton(s =>
-            ActivatorUtilities.CreateInstance<DatabaseComunicator>(s, dbPath));
+            
 
 
             return builder.Build();
