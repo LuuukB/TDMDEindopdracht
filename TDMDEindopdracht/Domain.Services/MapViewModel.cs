@@ -16,6 +16,7 @@ using TDMDEindopdracht.Domain.Model;
 using CommunityToolkit.Maui.Alerts;
 using System.Diagnostics.Metrics;
 using Plugin.LocalNotification;
+using Plugin.LocalNotification.AndroidOption;
 
 
 
@@ -30,7 +31,7 @@ namespace TDMDEindopdracht.Domain.Services
         [ObservableProperty] private bool _isStopEnabled = false;
         [ObservableProperty] private string _entryText;
 
-        private Location? _home;
+        private Location _home;
 
 
         private readonly IGeolocation _geolocation;
@@ -56,22 +57,32 @@ namespace TDMDEindopdracht.Domain.Services
             _routeHandler = routeHandler;
             
         }
-        private async void LocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
+        private void LocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
         {
             if (e?.Location != null)
             { 
                 try
                 {
+                    SetHome(e.Location);
                     Debug.WriteLine("Location: {0}", e.Location);
                     CurrentMapSpan = MapSpan.FromCenterAndRadius(e.Location, Distance.FromMeters(10));
 
                     UpdateRoute(e.Location);
-
+                    Debug.WriteLine("Home: ", _home);
+                    CheckHome(e.Location);
                 }
                 catch (Exception ex)
                 {
                     Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
                 }
+            }
+        }
+
+        private void SetHome(Location location)
+        {
+            if (_home != null) 
+            {
+                _home = location;
             }
         }
 
@@ -196,28 +207,39 @@ namespace TDMDEindopdracht.Domain.Services
 
             return polyline;
         }
+        public async Task<bool> CheckPermissionNotification() 
+        {
+            var status = await Permissions.CheckStatusAsync<Permissions.PostNotifications>();
+            if (status == PermissionStatus.Granted)
+            {
+                return true; 
+            }
+            return false;
+        }
 
-        public void CheckHome(Location location)
+        public async void CheckHome(Location location)
         {
 
             if (_home is null)
                 return;
- double distance = Location.CalculateDistance(_home, location, DistanceUnits.Kilometers);
+                
+            double distance = Location.CalculateDistance(_home, location, DistanceUnits.Kilometers);
             if (distance < 0.025)
             {
-                var request = new NotificationRequest
-                {
-                    NotificationId = 1,
-                    Title = "You are home",
-                    Subtitle = "home sweet home",
-                    Description = "...............",
-                    BadgeNumber = 1,
-                    CategoryType = NotificationCategoryType.Alarm
+                var check = await CheckPermissionNotification();
+                if (check) {
+                    var request = new NotificationRequest
+                    {
+                        NotificationId = 1,
+                        Title = "You are home",
+                        Subtitle = "home sweet home",
+                        Description = "...............",
+                        BadgeNumber = 1,
 
-                };
+                    };
 
-                LocalNotificationCenter.Current.Show(request);
-
+                    await LocalNotificationCenter.Current.Show(request);
+                }
             }
             
             
@@ -229,7 +251,7 @@ namespace TDMDEindopdracht.Domain.Services
 
         [RelayCommand]
         public async Task GoToMainPage()
-        {
+        { 
             await Shell.Current.GoToAsync("//MainPage");
         }
     }
