@@ -101,7 +101,7 @@ namespace TDMDEindopdracht.Domain.Services
 
             // geeft voor nu als afstand standaard 1000 mee. dit moet nog even aangepast worden naar de daadwerkelijk gelopen afstand
             _routeHandler.StopRoute(1000, EntryText);
-
+            _home = null;
             Debug.WriteLine("stopping route/timer");
          
             if (_locationTimer != null)
@@ -132,7 +132,9 @@ namespace TDMDEindopdracht.Domain.Services
                 {
                     Debug.WriteLine("Location: {0}", location);
                      CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Microsoft.Maui.Maps.Distance.FromMeters(10));
-
+                    if (_home != null) {
+                        _home = location;
+                    }
                     UpdateRoute(location);
                     CheckHome(location);
                 }
@@ -193,26 +195,6 @@ namespace TDMDEindopdracht.Domain.Services
             return polyline;
         }
 
-        public async Task SetHome() 
-        {
-            try
-            {
-
-               _home = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best));
-
-                if (_home is not null)
-                {
-                    Debug.WriteLine("Location: {home}", _home); 
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
-            }
-
-
-        }
-
         public void CheckHome(Location location)
         {
 
@@ -221,14 +203,14 @@ namespace TDMDEindopdracht.Domain.Services
  double distance = Location.CalculateDistance(_home, location, DistanceUnits.Kilometers);
             if (distance < 0.025)
             {
-               var request = new NotificationRequest
-                {   
-                NotificationId = 1,
-                Title = "You are home",
-                Subtitle = "home sweet home",
-                Description = "...............",
-                BadgeNumber = 1,
-                CategoryType = NotificationCategoryType.Alarm
+                var request = new NotificationRequest
+                {
+                    NotificationId = 1,
+                    Title = "You are home",
+                    Subtitle = "home sweet home",
+                    Description = "...............",
+                    BadgeNumber = 1,
+                    CategoryType = NotificationCategoryType.Alarm
 
                 };
 
