@@ -13,7 +13,7 @@ public partial class mapPage : ContentPage
         BindingContext = viewModel;
     }
 
-    //LET OP, als deze code in een andere klasse wordt gezet moet je op letten op sychronisatie. 
+
     public async Task<PermissionStatus> CheckAndRequestLocationPermission()
     {
 

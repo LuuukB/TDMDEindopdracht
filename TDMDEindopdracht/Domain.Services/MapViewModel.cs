@@ -148,8 +148,9 @@ namespace TDMDEindopdracht.Domain.Services
             IsStopEnabled = false;
 
             Debug.WriteLine("EntryText text: ", EntryText);
-            // geeft voor nu als afstand standaard 1000 mee. dit moet nog even aangepast worden naar de daadwerkelijk gelopen afstand
-            _routeHandler.StopRoute(1000, EntryText);
+        
+            var totalDistance = CalculateTotalDistanceRoute();
+            _routeHandler.StopRoute(totalDistance, EntryText);
 
 
             _locationCache.Clear();
@@ -159,7 +160,12 @@ namespace TDMDEindopdracht.Domain.Services
 
         }
 
-        
+        private double CalculateTotalDistanceRoute() 
+        {
+            return _locationCache.Count < 2? 0: _locationCache.Zip(_locationCache.Skip(1), (a, b) => a.CalculateDistance(b, DistanceUnits.Kilometers))
+                        .Sum() * 1000;
+            //*1000 zorgt voor dat het meters zijn
+        }
 
         private void UpdateRoute(Location location)
         {
@@ -180,8 +186,9 @@ namespace TDMDEindopdracht.Domain.Services
 
         private void ProcessNewLocation(Location location)
         {
+
             // TODO: Niet toevoegen als hij te dichtbij is bij de vorige locatie! En misschien andere logica toevoegen.
-            const double minDistance = 0.002;
+            const double minDistance = 0.005;
             if (_locationCache.Count == 0 || location.CalculateDistance(_locationCache.Last(), DistanceUnits.Kilometers) >= minDistance)
             {
                 _locationCache.Add(location);
