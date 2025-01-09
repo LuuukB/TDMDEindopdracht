@@ -33,7 +33,7 @@ namespace TDMDEindopdracht.Domain.Services
 
         private Location? _home;
         private bool _hasLeftHome = false;
-        private const double HomeRadiusMeters = 25.0;
+        private const double HomeRadiusMeters = 15.0;
 
 
 
@@ -65,7 +65,7 @@ namespace TDMDEindopdracht.Domain.Services
                 try
                 {
                     Debug.WriteLine("Location: {0}", e.Location);
-                    CurrentMapSpan = MapSpan.FromCenterAndRadius(e.Location, Distance.FromMeters(10));
+                    CurrentMapSpan = MapSpan.FromCenterAndRadius(e.Location, Distance.FromMeters(30));
                     SetHome(e.Location); 
                     Debug.WriteLine("Home: ", _home);
                     UpdateRoute(e.Location);
@@ -109,7 +109,7 @@ namespace TDMDEindopdracht.Domain.Services
 
                 if (location is not null)
                 {
-                    CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Microsoft.Maui.Maps.Distance.FromMeters(10));
+                    CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Microsoft.Maui.Maps.Distance.FromMeters(20));
                 }
             }
             catch (Exception ex)
@@ -151,13 +151,12 @@ namespace TDMDEindopdracht.Domain.Services
             // geeft voor nu als afstand standaard 1000 mee. dit moet nog even aangepast worden naar de daadwerkelijk gelopen afstand
             _routeHandler.StopRoute(1000, EntryText);
 
-            //todo nieuwe instantie haalt weg bij stop route maar wanneer je nieuwe route start komen allle lijnen weer terug
 
+            _locationCache.Clear();
             MapElements = new ObservableCollection<MapElement>();
             _home = null;
-            Debug.WriteLine("stopping route/timer");
-         
-  
+
+
         }
 
         
@@ -182,7 +181,7 @@ namespace TDMDEindopdracht.Domain.Services
         private void ProcessNewLocation(Location location)
         {
             // TODO: Niet toevoegen als hij te dichtbij is bij de vorige locatie! En misschien andere logica toevoegen.
-            const double minDistance = 0.01;
+            const double minDistance = 0.002;
             if (_locationCache.Count == 0 || location.CalculateDistance(_locationCache.Last(), DistanceUnits.Kilometers) >= minDistance)
             {
                 _locationCache.Add(location);
@@ -238,16 +237,19 @@ namespace TDMDEindopdracht.Domain.Services
             {
                 _hasLeftHome = false;
                 Debug.WriteLine("You have entered the home geofence!");
-
-                var request = new NotificationRequest
+                bool hasPermission = await CheckPermissionNotification();
+                if (hasPermission)
                 {
-                    NotificationId = 1,
-                    Title = "Welcome Home",
-                    Description = "You are close to your home!",
-                    BadgeNumber = 1
-                };
+                    var request = new NotificationRequest
+                    {
+                        NotificationId = 1,
+                        Title = "Welcome Home",
+                        Description = "You are close to your home!",
+                        BadgeNumber = 1
+                    };
 
-                await LocalNotificationCenter.Current.Show(request);
+                    await LocalNotificationCenter.Current.Show(request);
+                }
             }
     
         }
