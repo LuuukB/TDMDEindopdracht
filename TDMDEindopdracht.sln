@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TDMDEindopdracht", "TDMDEindopdracht\TDMDEindopdracht.csproj", "{56A70138-C40A-4D7F-AF41-B6AC1B0F4169}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TDMDEindopdracht", "TDMDEindopdracht\TDMDEindopdracht.csproj", "{56A70138-C40A-4D7F-AF41-B6AC1B0F4169}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests-DomainLayer", "UnitTests-DomainLayer\UnitTests-DomainLayer.csproj", "{34F18402-043B-4273-A10F-5BFB6436D3AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,6 +19,10 @@ Global
 		{56A70138-C40A-4D7F-AF41-B6AC1B0F4169}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{56A70138-C40A-4D7F-AF41-B6AC1B0F4169}.Release|Any CPU.Build.0 = Release|Any CPU
 		{56A70138-C40A-4D7F-AF41-B6AC1B0F4169}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{34F18402-043B-4273-A10F-5BFB6436D3AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34F18402-043B-4273-A10F-5BFB6436D3AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34F18402-043B-4273-A10F-5BFB6436D3AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34F18402-043B-4273-A10F-5BFB6436D3AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
