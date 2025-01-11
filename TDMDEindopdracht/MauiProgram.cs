@@ -27,7 +27,6 @@ namespace TDMDEindopdracht
 
 
             builder.Services.AddSingleton<ViewModel>();
-            builder.Services.AddTransient<RouteHandler>();
 
             string dbPath = Path.Combine(FileSystem.AppDataDirectory, "route.db");
 

@@ -54,6 +54,13 @@ namespace TDMDEindopdracht.Domain.Services
             }
         }
 
+        [RelayCommand]
+        public void RefreshRoutes()
+        {
+            //await Task.Run(() => { AddRoutes();   });
+            MainThread.BeginInvokeOnMainThread(() => { AddRoutes(); });
+        }
+
     }
 
 }

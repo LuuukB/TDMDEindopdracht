@@ -63,6 +63,15 @@
 
                     </Picker>
 
+                    <Button
+                        Text="Refresh Routes"
+                        Command="{Binding RefreshRoutesCommand}"
+                        VerticalOptions="Center"
+                        BorderColor="Black"
+                        BorderWidth="2"
+                        BackgroundColor="#28A745"
+                        TextColor="White"/>
+
                 </VerticalStackLayout>
 
 

@@ -28,8 +28,9 @@ namespace TDMDEindopdracht.Domain.Services
         
 
         private readonly IGeolocation _geolocation;
-        private RouteHandler _routeHandler;
         private System.Timers.Timer? _locationTimer;
+        private Route route;
+        private IDatabaseCommunicator _communicator;
 
         //private readonly List<Location> _routeCoordinates = new();
 
@@ -43,12 +44,12 @@ namespace TDMDEindopdracht.Domain.Services
         //[ObservableProperty]
         //public string currentLocation;
 
-        public MapViewModel(IGeolocation geolocation, RouteHandler routeHandler)
+        public MapViewModel(IGeolocation geolocation, IDatabaseCommunicator databaseCommunicator)
         {
             _geolocation = geolocation;
+            _communicator = databaseCommunicator;
             //todo: beter gezegd de currentmapspan moet naar user toe op het moment dat de map word gemaakt.
             InitializeMap();
-            _routeHandler = routeHandler;
         }
 
         private async void InitializeMap()
@@ -79,7 +80,8 @@ namespace TDMDEindopdracht.Domain.Services
             IsStartEnabled = false;
             IsStopEnabled = true;
 
-            _routeHandler.CreateRoute();
+            route = new Route();
+            route.StartRoute();
         }
         
         [RelayCommand]
@@ -95,7 +97,9 @@ namespace TDMDEindopdracht.Domain.Services
                 return; }
 
             // geeft voor nu als afstand standaard 1000 mee. dit moet nog even aangepast worden naar de daadwerkelijk gelopen afstand
-            _routeHandler.StopRoute(1000, EntryText);
+            route.StopRoute(1000, EntryText);
+            _communicator.AddRoute(route);
+
 
             Debug.WriteLine("stopping route/timer");
          
