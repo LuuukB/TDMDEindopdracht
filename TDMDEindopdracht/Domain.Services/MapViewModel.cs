@@ -15,23 +15,31 @@ using System.Timers;
 using TDMDEindopdracht.Domain.Model;
 using CommunityToolkit.Maui.Alerts;
 using System.Diagnostics.Metrics;
+using Plugin.LocalNotification;
+using Plugin.LocalNotification.AndroidOption;
+
+
+
+
 
 namespace TDMDEindopdracht.Domain.Services
 {
     public partial class MapViewModel : ObservableObject
     {
-        //[ObservableProperty]
-        //private Map mappy;
+     
         [ObservableProperty] private bool _isStartEnabled = true;
         [ObservableProperty] private bool _isStopEnabled = false;
         [ObservableProperty] private string _entryText;
-        
+
+        private Location? _home;
+        private bool _hasLeftHome = false;
+        private const double HomeRadiusMeters = 15.0;
+
+
 
         private readonly IGeolocation _geolocation;
         private RouteHandler _routeHandler;
-        private System.Timers.Timer? _locationTimer;
 
-        //private readonly List<Location> _routeCoordinates = new();
 
         [ObservableProperty] private ObservableCollection<MapElement> _mapElements = new();
 
@@ -40,17 +48,59 @@ namespace TDMDEindopdracht.Domain.Services
 
         [ObservableProperty] public MapSpan _currentMapSpan;
 
-        //[ObservableProperty]
-        //public string currentLocation;
 
         public MapViewModel(IGeolocation geolocation, RouteHandler routeHandler)
         {
             _geolocation = geolocation;
-            //todo: beter gezegd de currentmapspan moet naar user toe op het moment dat de map word gemaakt.
+            _geolocation.LocationChanged += LocationChanged;
+
             InitializeMap();
             _routeHandler = routeHandler;
+            
+        }
+        private void LocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
+        {
+            if (e?.Location != null)
+            { 
+                try
+                {
+                    Debug.WriteLine("Location: {0}", e.Location);
+                    CurrentMapSpan = MapSpan.FromCenterAndRadius(e.Location, Distance.FromMeters(30));
+                    SetHome(e.Location); 
+                    Debug.WriteLine("Home: ", _home);
+                    UpdateRoute(e.Location);
+                    CheckHome(e.Location);
+
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
+                }
+            }
         }
 
+        private void SetHome(Location location)
+        {
+            if (_home == null)
+            {
+                _home = location;
+            }
+        }
+
+        public async Task ListeningToLocation() 
+        {
+            await _geolocation.StartListeningForegroundAsync(new GeolocationListeningRequest
+            {
+                MinimumTime = TimeSpan.FromSeconds(5),
+                DesiredAccuracy = GeolocationAccuracy.Best
+            });
+        
+        }
+
+        public void StopListeningToLocation() 
+        {
+            _geolocation.StopListeningForeground();
+        }
         private async void InitializeMap()
         {
             try
@@ -59,7 +109,7 @@ namespace TDMDEindopdracht.Domain.Services
 
                 if (location is not null)
                 {
-                    CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(10));
+                    CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Microsoft.Maui.Maps.Distance.FromMeters(20));
                 }
             }
             catch (Exception ex)
@@ -69,75 +119,47 @@ namespace TDMDEindopdracht.Domain.Services
         }
 
         [RelayCommand]
-        public void RouteStarting()
+        public async Task RouteStarting()
         {
-            Debug.WriteLine("starting route/timer");
-            _locationTimer = new System.Timers.Timer(5000);
-            _locationTimer.Elapsed += OnTimedEvent;
-            _locationTimer.AutoReset = true;
-            _locationTimer.Start();
+            Debug.WriteLine("starting route");
             IsStartEnabled = false;
             IsStopEnabled = true;
-
-            _routeHandler.CreateRoute();
+           await ListeningToLocation();
+           
+           _routeHandler.CreateRoute();
         }
         
         [RelayCommand]
         public void RouteStop()
         {
+           
+           
 
-            if (EntryText.Length == 0)
+            if (string.IsNullOrEmpty(EntryText))
             { var noName = Toast.Make("U need to fill in a name", CommunityToolkit.Maui.Core.ToastDuration.Short).Show();
                 return; }
 
             if (EntryText.StartsWith(" "))
-            { var startsWithSpace = Toast.Make("The name of the runs starts with a space", CommunityToolkit.Maui.Core.ToastDuration.Short).Show();
-                return; }
+            { var startsWithSpace = Toast.Make("The name of the run starts with a space", CommunityToolkit.Maui.Core.ToastDuration.Short).Show();
+                return; } 
+            Debug.WriteLine("stopping route");
+            StopListeningToLocation();
+            IsStartEnabled = true;
+            IsStopEnabled = false;
 
+            Debug.WriteLine("EntryText text: ", EntryText);
             // geeft voor nu als afstand standaard 1000 mee. dit moet nog even aangepast worden naar de daadwerkelijk gelopen afstand
             _routeHandler.StopRoute(1000, EntryText);
 
-            Debug.WriteLine("stopping route/timer");
-         
-            if (_locationTimer != null)
-            {
-                _locationTimer.Stop();
-                _locationTimer.Dispose();
-                _locationTimer = null;
-                IsStartEnabled = true;
-                IsStopEnabled = false;
-                MapElements.Clear();
-                //todo eerst route opslaan voordat je de lijnen weg haalt idk wat we nog echt willen gaan doen.
-            }
+
+            _locationCache.Clear();
+            MapElements = new ObservableCollection<MapElement>();
+            _home = null;
+
+
         }
 
-        private void OnTimedEvent(object? sender, ElapsedEventArgs e)
-        {
-            Task.Run(OnTimedEventAsync);
-        }
-
-        private async Task OnTimedEventAsync()
-        {
-            try
-            {
-                Debug.WriteLine("Running {0} at {1}", nameof(OnTimedEventAsync), DateTime.Now.ToShortTimeString());
-
-                var location =
-                    await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best));
-
-                if (location is not null)
-                {
-                    Debug.WriteLine("Location: {0}", location);
-                     CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(10));
-
-                    UpdateRoute(location);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
-            }
-        }
+        
 
         private void UpdateRoute(Location location)
         {
@@ -159,7 +181,7 @@ namespace TDMDEindopdracht.Domain.Services
         private void ProcessNewLocation(Location location)
         {
             // TODO: Niet toevoegen als hij te dichtbij is bij de vorige locatie! En misschien andere logica toevoegen.
-            const double minDistance = 0.01;
+            const double minDistance = 0.002;
             if (_locationCache.Count == 0 || location.CalculateDistance(_locationCache.Last(), DistanceUnits.Kilometers) >= minDistance)
             {
                 _locationCache.Add(location);
@@ -188,10 +210,53 @@ namespace TDMDEindopdracht.Domain.Services
 
             return polyline;
         }
+        public async Task<bool> CheckPermissionNotification() 
+        {
+            var status = await Permissions.CheckStatusAsync<Permissions.PostNotifications>();
+            if (status == PermissionStatus.Granted)
+            {
+                return true; 
+            }
+            return false;
+        }
+
+        public async void CheckHome(Location location)
+        {
+
+            if (_home == null) return;
+
+            double distanceInKm = Location.CalculateDistance(_home, location, DistanceUnits.Kilometers);
+            double distanceInMeters = distanceInKm * 1000;
+
+            if (distanceInMeters > HomeRadiusMeters)
+            {
+                _hasLeftHome = true; 
+                Debug.WriteLine("You have left the home geofence.");
+            }
+            else if (distanceInMeters <= HomeRadiusMeters && _hasLeftHome)
+            {
+                _hasLeftHome = false;
+                Debug.WriteLine("You have entered the home geofence!");
+                bool hasPermission = await CheckPermissionNotification();
+                if (hasPermission)
+                {
+                    var request = new NotificationRequest
+                    {
+                        NotificationId = 1,
+                        Title = "Welcome Home",
+                        Description = "You are close to your home!",
+                        BadgeNumber = 1
+                    };
+
+                    await LocalNotificationCenter.Current.Show(request);
+                }
+            }
+    
+        }
 
         [RelayCommand]
         public async Task GoToMainPage()
-        {
+        { 
             await Shell.Current.GoToAsync("//MainPage");
         }
     }
