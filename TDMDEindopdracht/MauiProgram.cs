@@ -1,5 +1,6 @@
 using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
+using Plugin.LocalNotification;
 using TDMDEindopdracht.Domain.Model;
 using TDMDEindopdracht.Domain.Services;
 using TDMDEindopdracht.Infrastructure;
@@ -16,6 +17,7 @@ namespace TDMDEindopdracht
                 .UseMauiApp<App>()
                 .UseMauiCommunityToolkit()
                 .UseMauiMaps()
+                .UseLocalNotification()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -44,9 +46,11 @@ namespace TDMDEindopdracht
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
-            
+        
+
 
             
+
 
             return builder.Build();
         }
