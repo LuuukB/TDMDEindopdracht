@@ -38,7 +38,9 @@ namespace TDMDEindopdracht.Domain.Services
 
 
         private readonly IGeolocation _geolocation;
-        private RouteHandler _routeHandler;
+        private System.Timers.Timer? _locationTimer;
+        private Route route;
+        private IDatabaseCommunicator _communicator;
 
 
         [ObservableProperty] private ObservableCollection<MapElement> _mapElements = new();
@@ -49,14 +51,14 @@ namespace TDMDEindopdracht.Domain.Services
         [ObservableProperty] public MapSpan _currentMapSpan;
 
 
-        public MapViewModel(IGeolocation geolocation, RouteHandler routeHandler)
+        public MapViewModel(IGeolocation geolocation, IDatabaseCommunicator databaseCommunicator)
         {
             _geolocation = geolocation;
+            _communicator = databaseCommunicator;
+            //todo: beter gezegd de currentmapspan moet naar user toe op het moment dat de map word gemaakt.
             _geolocation.LocationChanged += LocationChanged;
 
             InitializeMap();
-            _routeHandler = routeHandler;
-            
         }
         private void LocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
         {
@@ -125,8 +127,9 @@ namespace TDMDEindopdracht.Domain.Services
             IsStartEnabled = false;
             IsStopEnabled = true;
            await ListeningToLocation();
-           
-           _routeHandler.CreateRoute();
+
+            route = new Route();
+            route.StartRoute();
         }
         
         [RelayCommand]
@@ -147,10 +150,13 @@ namespace TDMDEindopdracht.Domain.Services
             IsStartEnabled = true;
             IsStopEnabled = false;
 
+            // geeft voor nu als afstand standaard 1000 mee. dit moet nog even aangepast worden naar de daadwerkelijk gelopen afstand
+            
             Debug.WriteLine("EntryText text: ", EntryText);
         
             var totalDistance = CalculateTotalDistanceRoute();
-            _routeHandler.StopRoute(totalDistance, EntryText);
+            route.StopRoute(totalDistance, EntryText);
+            _communicator.AddRoute(route);
 
 
             _locationCache.Clear();
@@ -160,14 +166,14 @@ namespace TDMDEindopdracht.Domain.Services
 
         }
 
-        private double CalculateTotalDistanceRoute() 
+        public double CalculateTotalDistanceRoute() 
         {
             return _locationCache.Count < 2? 0: _locationCache.Zip(_locationCache.Skip(1), (a, b) => a.CalculateDistance(b, DistanceUnits.Kilometers))
                         .Sum() * 1000;
             //*1000 zorgt voor dat het meters zijn
         }
 
-        private void UpdateRoute(Location location)
+        public void UpdateRoute(Location location)
         {
             Debug.WriteLine("Running {0} at {1}.", nameof(UpdateRoute), DateTime.Now.ToShortTimeString());
 
@@ -184,7 +190,7 @@ namespace TDMDEindopdracht.Domain.Services
             Debug.WriteLine($"Route bijgewerkt: {location.Latitude}, {location.Longitude}");
         }
 
-        private void ProcessNewLocation(Location location)
+        public void ProcessNewLocation(Location location)
         {
 
             // TODO: Niet toevoegen als hij te dichtbij is bij de vorige locatie! En misschien andere logica toevoegen.
@@ -200,7 +206,7 @@ namespace TDMDEindopdracht.Domain.Services
            
         }
 
-        private Polyline CreatePolyLineOfLocations(IEnumerable<Location> locations)
+        public Polyline CreatePolyLineOfLocations(IEnumerable<Location> locations)
         {
             Debug.WriteLine("Constructing {0}", args: nameof(Polyline));
             Polyline polyline = new Polyline
