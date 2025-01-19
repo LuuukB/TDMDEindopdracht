@@ -46,12 +46,12 @@ namespace TDMDEindopdracht.Domain.Services
         [ObservableProperty] private ObservableCollection<MapElement> _mapElements = new();
 
         private List<Location> _locationCache = [];
-
+        private ILocationPermisssionService _locationPermisssion;
 
         [ObservableProperty] public MapSpan _currentMapSpan;
 
 
-        public MapViewModel(IGeolocation geolocation, IDatabaseCommunicator databaseCommunicator)
+        public MapViewModel(IGeolocation geolocation, IDatabaseCommunicator databaseCommunicator,ILocationPermisssionService locationPermission )
         {
             _geolocation = geolocation;
             _communicator = databaseCommunicator;
@@ -107,18 +107,52 @@ namespace TDMDEindopdracht.Domain.Services
         {
             try
             {
-                var location = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best));
+                try
+                {
+                    var location = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best));
 
-                if (location is not null)
+                    if (location is not null)
+                    {
+                        CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(10));
+                    }
+                }
+                catch (Exception ex)
                 {
                     CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Microsoft.Maui.Maps.Distance.FromMeters(20));
                 }
             }
-            catch (Exception ex)
+            else
             {
-                Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
+                Debug.WriteLine("Locatiepermissie is niet verleend.");
+                await _locationPermisssion.ShowSettingsIfPermissionDeniedAsync();
             }
         }
+        //public async Task CheckAndRequestLocationPermission()
+        //{
+        //    var status = await _locationPermisssion.CheckAndRequestLocationPermissionAsync();
+
+        //    if (status == PermissionStatus.Denied)
+        //    {
+        //        await _locationPermisssion.ShowSettingsIfPermissionDeniedAsync();
+        //    }
+        //}
+        //private async void InitializeMap()
+        //{
+        //    await CheckAndRequestLocationPermission();
+        //    try
+        //    {
+        //        var location = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best));
+
+        //        if (location is not null)
+        //        {
+        //            CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(10));
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
+        //    }
+        //}
 
         [RelayCommand]
         public async Task RouteStarting()

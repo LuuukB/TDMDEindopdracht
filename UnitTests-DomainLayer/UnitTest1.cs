@@ -7,6 +7,7 @@ using TDMDEindopdracht.Domain.Services;
 namespace UnitTests_DomainLayer
 {
     public class UnitTest1
+        //todo naam veranderen klasse
     {
         [Fact]
         public void StartRoute_ShouldSetCurrentTime()
@@ -41,7 +42,7 @@ namespace UnitTests_DomainLayer
             // Assert
             Assert.Equal(routeName, route.Name);
             Assert.Equal(expectedDistance, route.Distance);
-            Assert.Equal("02:00:00", route.TotalRunTime); // Assuming runtime formatting is "hh:mm:ss"
+            Assert.Equal("02:00:00", route.TotalRunTime); // runtime formatting is "hh:mm:ss"
             Assert.Equal(50, route.AveradgeSpeed); // Speed = distance / time (100 km / 2 hours)
         }
 
