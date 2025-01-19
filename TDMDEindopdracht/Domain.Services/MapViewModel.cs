@@ -58,7 +58,7 @@ namespace TDMDEindopdracht.Domain.Services
             //todo: beter gezegd de currentmapspan moet naar user toe op het moment dat de map word gemaakt.
             _geolocation.LocationChanged += LocationChanged;
 
-            InitializeMap();
+            InitializeMapAsync();
         }
         private void LocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
         {
@@ -103,9 +103,12 @@ namespace TDMDEindopdracht.Domain.Services
         {
             _geolocation.StopListeningForeground();
         }
-        private async void InitializeMap()
+        private async void InitializeMapAsync()
         {
-            try
+            // Wacht op het resultaat van de permissiecontrole
+            var status = await _locationPermisssion.CheckAndRequestLocationPermissionAsync();
+
+            if (status == PermissionStatus.Granted)
             {
                 try
                 {
@@ -118,7 +121,7 @@ namespace TDMDEindopdracht.Domain.Services
                 }
                 catch (Exception ex)
                 {
-                    CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Microsoft.Maui.Maps.Distance.FromMeters(20));
+                    Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
                 }
             }
             else
@@ -127,32 +130,6 @@ namespace TDMDEindopdracht.Domain.Services
                 await _locationPermisssion.ShowSettingsIfPermissionDeniedAsync();
             }
         }
-        //public async Task CheckAndRequestLocationPermission()
-        //{
-        //    var status = await _locationPermisssion.CheckAndRequestLocationPermissionAsync();
-
-        //    if (status == PermissionStatus.Denied)
-        //    {
-        //        await _locationPermisssion.ShowSettingsIfPermissionDeniedAsync();
-        //    }
-        //}
-        //private async void InitializeMap()
-        //{
-        //    await CheckAndRequestLocationPermission();
-        //    try
-        //    {
-        //        var location = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best));
-
-        //        if (location is not null)
-        //        {
-        //            CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(10));
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
-        //    }
-        //}
 
         [RelayCommand]
         public async Task RouteStarting()
