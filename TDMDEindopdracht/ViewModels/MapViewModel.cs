@@ -22,7 +22,7 @@ using Plugin.LocalNotification.AndroidOption;
 
 
 
-namespace TDMDEindopdracht.Domain.Services
+namespace TDMDEindopdracht.ViewModels
 {
     public partial class MapViewModel : ObservableObject
     {

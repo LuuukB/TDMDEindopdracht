@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TDMDEindopdracht.MainPage"
-             xmlns:viewmodel = "clr-namespace:TDMDEindopdracht.Domain.Services"
+             xmlns:viewmodel = "clr-namespace:TDMDEindopdracht.ViewModels"
              x:DataType="viewmodel:ViewModel"
              BackgroundColor="LightGreen"
              >
@@ -21,21 +21,11 @@
                 HorizontalOptions="Fill"
                 BackgroundColor="Green"/>
 
-            <HorizontalStackLayout HorizontalOptions="Center">
-
-                <Label
-                Text="Welcome to &#10;.NET Multi-platform App UI"
+            <Label
+                Text="Welcome to StraGaan"
                 Style="{StaticResource SubHeadline}"
-                SemanticProperties.HeadingLevel="Level2"
-                SemanticProperties.Description="Welcome to dot net Multi platform App U I" 
                 VerticalOptions="Center"
                 HorizontalOptions="Center"/>
-            <Image
-                Source="dotnet_bot.png"
-                HeightRequest="185"
-                Aspect="AspectFit"
-                SemanticProperties.Description="dot net bot in a race car number eight" />
-        </HorizontalStackLayout>
 
             <Frame BorderColor="Black" Padding="10" Margin="5" HorizontalOptions="Center">
                 <VerticalStackLayout>

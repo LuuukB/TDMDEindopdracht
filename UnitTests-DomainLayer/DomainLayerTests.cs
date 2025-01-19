@@ -6,6 +6,7 @@ using Plugin.LocalNotification;
 using System.Reflection;
 using TDMDEindopdracht.Domain.Model;
 using TDMDEindopdracht.Domain.Services;
+using TDMDEindopdracht.ViewModels;
 
 namespace UnitTests_DomainLayer
 {

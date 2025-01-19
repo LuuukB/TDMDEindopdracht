@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Plugin.LocalNotification;
 using TDMDEindopdracht.Domain.Model;
 using TDMDEindopdracht.Domain.Services;
+using TDMDEindopdracht.ViewModels;
 using TDMDEindopdracht.Infrastructure;
 
 

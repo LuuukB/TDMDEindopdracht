@@ -2,6 +2,7 @@ using Microsoft.Maui.Controls.Maps;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using TDMDEindopdracht.Domain.Services;
+using TDMDEindopdracht.ViewModels;
 
 namespace TDMDEindopdracht;
 

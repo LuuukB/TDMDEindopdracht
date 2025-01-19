@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TDMDEindopdracht.Domain.Model;
 
-namespace TDMDEindopdracht.Domain.Services
+namespace TDMDEindopdracht.ViewModels
 {
     public partial class ViewModel : ObservableObject
     {
