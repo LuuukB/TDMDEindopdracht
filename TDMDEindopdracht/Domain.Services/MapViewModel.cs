@@ -57,10 +57,10 @@ namespace TDMDEindopdracht.Domain.Services
             _geolocation = geolocation;
             _communicator = databaseCommunicator;
             _locationPermisssion = locationPermission;
-            //todo: beter gezegd de currentmapspan moet naar user toe op het moment dat de map word gemaakt.
+            
             _geolocation.LocationChanged += LocationChanged;
 
-            InitializeMapAsync();
+            Task.Run(InitializeMapAsync);
         }
         public void LocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
         {
@@ -105,7 +105,8 @@ namespace TDMDEindopdracht.Domain.Services
         {
             _geolocation.StopListeningForeground();
         }
-        public async void InitializeMapAsync()
+        
+        public async Task InitializeMapAsync()
         {
             // Wacht op het resultaat van de permissiecontrole
             var status = await _locationPermisssion.CheckAndRequestLocationPermissionAsync();

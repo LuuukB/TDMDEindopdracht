@@ -7,8 +7,8 @@ using TDMDEindopdracht.Domain.Services;
 
 namespace UnitTests_DomainLayer
 {
-    public class UnitTest1
-        //todo naam veranderen klasse
+    public class DomainLayerTests
+        
     {
         [Fact]
         public void StartRoute_ShouldSetCurrentTime()
@@ -293,5 +293,89 @@ namespace UnitTests_DomainLayer
             Assert.Equal(testLocation.Latitude, _viewModel.Home?.Latitude);
             Assert.Equal(testLocation.Longitude, _viewModel.Home?.Longitude);
         }
+
+        [Fact]
+        public async Task InitializeMap_ShouldInitializeMap_WhenPermissionGranted()
+        {
+            // Arrange
+            MapViewModelTests();
+            var location = new Location(52.370216, 4.895168); // Voorbeeldlocatie
+
+            // Stel de mocks in
+            _mockLocationPermission.Setup(l => l.CheckAndRequestLocationPermissionAsync())
+                                   .ReturnsAsync(PermissionStatus.Granted);
+
+            // Gebruik de fake implementatie van Geolocation
+            var fakeGeolocation = new FakeGeolocation();
+            var viewModel = new MapViewModel(fakeGeolocation, _mockDatabaseCommunicator.Object, _mockLocationPermission.Object);
+
+            // Act
+            await viewModel.InitializeMapAsync();
+
+            // Assert
+            Assert.NotNull(viewModel.CurrentMapSpan); // Verifieer dat CurrentMapSpan is ingesteld
+            Assert.Equal(location.Latitude, viewModel.CurrentMapSpan.Center.Latitude); // Controleer of de kaart is ingesteld op de juiste locatie
+            Assert.Equal(location.Longitude, viewModel.CurrentMapSpan.Center.Longitude);
+        }
+
+        [Fact]
+        public async Task InitializeMap_ShouldNotInitializeMap_WhenPermissionDenied()
+        {
+            // Arrange
+            MapViewModelTests();
+
+            // Stel de mocks in
+            _mockLocationPermission.Setup(l => l.CheckAndRequestLocationPermissionAsync())
+                                   .ReturnsAsync(PermissionStatus.Denied);
+
+            // Act
+            await _viewModel.InitializeMapAsync();
+
+            // Assert
+            Assert.Null(_viewModel.CurrentMapSpan); // Verifieer dat CurrentMapSpan niet is ingesteld
+        }
+
+        [Fact]
+        public async Task InitializeMap_ShouldHandleException_WhenLocationCannotBeRetrieved()
+        {
+            // Arrange
+            MapViewModelTests();
+
+            // Stel de mocks in
+            _mockLocationPermission.Setup(l => l.CheckAndRequestLocationPermissionAsync())
+                                   .ReturnsAsync(PermissionStatus.Granted);
+            _mockGeolocation.Setup(g => g.GetLocationAsync(It.IsAny<GeolocationRequest>()))
+                            .ThrowsAsync(new Exception("Locatie ophalen mislukt"));
+
+            // Act
+            await _viewModel.InitializeMapAsync();
+
+            // Assert
+            Assert.Null(_viewModel.CurrentMapSpan); // Verifieer dat CurrentMapSpan niet is ingesteld
+                                                 
+        }
+        [Fact]
+        public async Task InitializeMapAsync_ShouldCallShowSettingsIfPermissionDenied_WhenPermissionDeniedForLocation()
+        {
+            // Arrange
+            MapViewModelTests();
+            _mockLocationPermission.Reset();
+
+            // Stel de permissie in op geweigerd
+            _mockLocationPermission.Setup(lp => lp.CheckAndRequestLocationPermissionAsync())
+                .ReturnsAsync(PermissionStatus.Denied);
+
+            var mapViewModel = new MapViewModel(_mockGeolocation.Object, _mockDatabaseCommunicator.Object, _mockLocationPermission.Object);
+
+            // Act
+            await mapViewModel.InitializeMapAsync();
+
+            // Assert: Controleer dat de ShowSettingsIfPermissionDeniedAsync methode wordt aangeroepen
+            _mockLocationPermission.Verify(lp => lp.ShowSettingsIfPermissionDeniedAsync(), Times.Exactly(1));
+
+            // Controleer dat er geen locatie wordt opgehaald als de permissie is geweigerd
+            _mockGeolocation.Verify(geo => geo.GetLocationAsync(It.IsAny<GeolocationRequest>()), Times.Never);
+        }
+
     }
 }
