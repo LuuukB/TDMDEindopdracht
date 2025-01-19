@@ -33,7 +33,7 @@ namespace TDMDEindopdracht.Domain.Services
 
         private Location? _home;
         public Location? Home => _home;
-        private bool _hasLeftHome = false;
+        public bool _hasLeftHome = false;
         private const double HomeRadiusMeters = 15.0;
 
 

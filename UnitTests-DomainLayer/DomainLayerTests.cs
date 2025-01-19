@@ -2,6 +2,7 @@
 using Microsoft.Maui.Controls.Maps;
 using Microsoft.Maui.Maps;
 using Moq;
+using Plugin.LocalNotification;
 using System.Reflection;
 using TDMDEindopdracht.Domain.Model;
 using TDMDEindopdracht.Domain.Services;
@@ -9,7 +10,7 @@ using TDMDEindopdracht.Domain.Services;
 namespace UnitTests_DomainLayer
 {
     public class DomainLayerTests
-        
+
     {
         [Fact]
         public void StartRoute_ShouldSetCurrentTime()
@@ -106,6 +107,7 @@ namespace UnitTests_DomainLayer
             _mockLocationPermission = new Mock<ILocationPermisssionService>();
 
             _viewModel = new MapViewModel(_mockGeolocation.Object, _mockDatabaseCommunicator.Object, _mockLocationPermission.Object);
+
         }
 
         [Fact]
@@ -405,9 +407,9 @@ namespace UnitTests_DomainLayer
             // Arrange
             var bindableMap = new BindableMap();
             var initialElements = new List<MapElement>
-    {
-        new Polyline { StrokeColor = Colors.Red }
-    };
+                {
+                    new Polyline { StrokeColor = Colors.Red }
+                };
 
             bindableMap.MvvmMapElements = initialElements;
 
@@ -415,16 +417,16 @@ namespace UnitTests_DomainLayer
             for (int i = 0; i < 100; i++)
             {
                 bindableMap.MvvmMapElements = new List<MapElement>
-        {
-            new Polyline { StrokeColor = Color.FromRgb(i, i, i) }
-        };
-            }
+                    {
+                         new Polyline { StrokeColor = Color.FromRgb(i, i, i) }
+                    };
+                }
 
             // Assert
             Assert.Single(bindableMap.MapElements);
             Assert.True(bindableMap.MapElements.First() is Polyline);
         }
-        
+
         [Fact]
         public void MvvmMapElements_ShouldHandleNullOrEmptyCollections()
         {
@@ -464,5 +466,99 @@ namespace UnitTests_DomainLayer
             Assert.Contains(polyline, bindableMap.MapElements.ToList());
         }
 
+        [Fact]
+        public async Task CheckHome_SetsHasLeftHome_WhenOutsideGeofence()
+        {
+            MapViewModelTests();
+            // Arrange
+            var homeLocation = new Location(52.370216, 4.895168); // Set as home
+            var awayLocation = new Location(52.371216, 4.896168); // Outside geofence
+
+            _viewModel.SetHome(homeLocation);
+            // Act
+            _viewModel.CheckHome(awayLocation);
+
+            // Assert
+            Assert.True(_viewModel._hasLeftHome); // Ensure geofence logic is working
+        }
+
+        [Fact]
+        public async Task CheckHome_IsFalseAgain_WhenEnteringGeofence()
+        {
+            MapViewModelTests();
+            // Arrange
+            var homeLocation = new Location(52.370216, 4.895168); // Set as home
+            var awayLocation = new Location(52.371216, 4.896168); // Outside geofence
+
+            _viewModel.SetHome(homeLocation);
+
+            // Simulate leaving home
+            _viewModel.CheckHome(awayLocation);
+
+            // Act
+            _viewModel.CheckHome(homeLocation); // Re-enter home geofence
+
+            // Assert
+            // ik zou hier graag notificatie checken maar ik kan de localnotificationsender niet mocken dat lukt me niet
+            Assert.False(_viewModel._hasLeftHome); // Ensure state is reset
+        }
+
+        [Fact]
+        public void AddRoutes_ShouldPopulateRoutesCollection()
+        {
+            // Arrange: Create a mock of IDatabaseCommunicator
+            var mockDatabaseCommunicator = new Mock<IDatabaseCommunicator>();
+
+            // Create sample routes that will be returned from the mock
+            var routes = new List<Route>
+            {
+                new Route { Name = "Route 1", Distance = 5.0, TotalRunTime = "00:30:00", AveradgeSpeed = 10.0 },
+                new Route { Name = "Route 2", Distance = 10.0, TotalRunTime = "00:45:00", AveradgeSpeed = 13.33 }
+            };
+
+            // Setup the mock to return the sample routes when GetAllRoutes is called
+            mockDatabaseCommunicator.Setup(c => c.GetAllRoutes()).Returns(routes);
+
+            // Create an instance of the ViewModel with the mock database communicator
+            var viewModel = new ViewModel(mockDatabaseCommunicator.Object);
+
+            // Act: Call AddRoutes() to populate the Routes collection
+            viewModel.AddRoutes();
+
+            // Assert: Ensure that Routes collection contains the expected routes
+            Assert.Equal(2, viewModel.Routes.Count); // Should contain 2 routes
+            Assert.Equal("Route 1", viewModel.Routes[0].Name); // First route name
+            Assert.Equal("Route 2", viewModel.Routes[1].Name); // Second route name
+        }
+
+        [Fact]
+        public void OnSelectedRouteChanged_ShouldUpdateProperties_WhenRouteIsNotNull()
+        {
+            // Arrange: Create a mock of IDatabaseCommunicator (if necessary for other tests)
+            var mockDatabaseCommunicator = new Mock<IDatabaseCommunicator>();
+
+            mockDatabaseCommunicator.Setup(c => c.GetAllRoutes()).Returns(new List<Route>());
+
+            var viewModel = new ViewModel(mockDatabaseCommunicator.Object);
+
+            // Create a Route to be set as SelectedRoute
+            var route = new Route
+            {
+                Name = "Route 1",
+                Distance = 10.5,
+                TotalRunTime = "01:00:00",
+                AveradgeSpeed = 10.5
+            };
+
+            // Act: Set the SelectedRoute which will invoke OnSelectedRouteChanged
+            viewModel.SelectedRoute = route;
+
+            // Assert: Verify that the properties were updated correctly
+            Assert.Equal("Route 1", viewModel.SelectedName);
+            Assert.Equal("10,5", viewModel.SelectedDistance);
+            Assert.Equal("01:00:00", viewModel.SelectedTotalRunTime);
+            Assert.Equal("10,5", viewModel.SelectedAveradgeSpeed);
+        }
     }
+        
 }
