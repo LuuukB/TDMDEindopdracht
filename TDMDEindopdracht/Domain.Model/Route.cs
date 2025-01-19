@@ -22,10 +22,11 @@ namespace TDMDEindopdracht.Domain.Model
         public void StopRoute(double distance, string name)
         {
             var runTime = DateTime.Now - Time;
-            TotalRunTime = runTime.ToString();
+            var runTimeWhithoutMiliseconds = new TimeSpan(runTime.Days, runTime.Hours, runTime.Minutes, runTime.Seconds);
+            TotalRunTime = runTimeWhithoutMiliseconds.ToString();
             Name = name;
             Distance = distance;
-            AveradgeSpeed = distance / runTime.TotalHours;
+            AveradgeSpeed = distance / runTimeWhithoutMiliseconds.TotalHours;
         }
     }
 
