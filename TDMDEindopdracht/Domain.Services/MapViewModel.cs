@@ -166,14 +166,14 @@ namespace TDMDEindopdracht.Domain.Services
 
         }
 
-        private double CalculateTotalDistanceRoute() 
+        public double CalculateTotalDistanceRoute() 
         {
             return _locationCache.Count < 2? 0: _locationCache.Zip(_locationCache.Skip(1), (a, b) => a.CalculateDistance(b, DistanceUnits.Kilometers))
                         .Sum() * 1000;
             //*1000 zorgt voor dat het meters zijn
         }
 
-        private void UpdateRoute(Location location)
+        public void UpdateRoute(Location location)
         {
             Debug.WriteLine("Running {0} at {1}.", nameof(UpdateRoute), DateTime.Now.ToShortTimeString());
 
@@ -190,7 +190,7 @@ namespace TDMDEindopdracht.Domain.Services
             Debug.WriteLine($"Route bijgewerkt: {location.Latitude}, {location.Longitude}");
         }
 
-        private void ProcessNewLocation(Location location)
+        public void ProcessNewLocation(Location location)
         {
 
             // TODO: Niet toevoegen als hij te dichtbij is bij de vorige locatie! En misschien andere logica toevoegen.
@@ -206,7 +206,7 @@ namespace TDMDEindopdracht.Domain.Services
            
         }
 
-        private Polyline CreatePolyLineOfLocations(IEnumerable<Location> locations)
+        public Polyline CreatePolyLineOfLocations(IEnumerable<Location> locations)
         {
             Debug.WriteLine("Constructing {0}", args: nameof(Polyline));
             Polyline polyline = new Polyline

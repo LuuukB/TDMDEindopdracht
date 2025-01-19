@@ -1,4 +1,6 @@
 
+using Microsoft.Maui.Controls.Maps;
+using Moq;
 using TDMDEindopdracht.Domain.Model;
 using TDMDEindopdracht.Domain.Services;
 
@@ -87,6 +89,128 @@ namespace UnitTests_DomainLayer
             Assert.Equal(expectedDistance, route.Distance);
             Assert.Equal("00:00:01", route.TotalRunTime); // 1 second
             Assert.True(route.AveradgeSpeed > 0, "Average speed should be greater than 0 when distance is positive.");
+        }
+
+        private Mock<IGeolocation> _mockGeolocation;
+        private Mock<IDatabaseCommunicator> _mockDatabaseCommunicator;
+        private MapViewModel _viewModel;
+
+        public void MapViewModelTests()
+        {
+            _mockGeolocation = new Mock<IGeolocation>();
+            _mockDatabaseCommunicator = new Mock<IDatabaseCommunicator>();
+
+            _viewModel = new MapViewModel(_mockGeolocation.Object, _mockDatabaseCommunicator.Object);
+        }
+
+        [Fact]
+        public async Task RouteStarting_ShouldStartRouteAndEnableStop()
+        {
+            MapViewModelTests();
+            // Arrange
+            _mockGeolocation.Setup(g => g.StartListeningForegroundAsync(It.IsAny<GeolocationListeningRequest>())).Returns(Task.FromResult(true));
+
+            // Act
+            await _viewModel.RouteStarting();
+
+            // Assert
+            Assert.False(_viewModel.IsStartEnabled, "Start should be disabled after starting the route.");
+            Assert.True(_viewModel.IsStopEnabled, "Stop should be enabled after starting the route.");
+        }
+
+        [Fact]
+        public void RouteStop_ShouldStopRouteAndSaveToDatabase()
+        {
+            MapViewModelTests();
+            // Arrange
+            _viewModel.EntryText = "TestRoute";
+            _viewModel.RouteStarting().Wait(); // Start the route
+
+            _mockGeolocation.Setup(g => g.StopListeningForeground());
+            _mockDatabaseCommunicator.Setup(d => d.AddRoute(It.IsAny<Route>())).Verifiable();
+
+            // Act
+            _viewModel.RouteStop();
+
+            // Assert
+            Assert.True(_viewModel.IsStartEnabled, "Start should be enabled after stopping the route.");
+            Assert.False(_viewModel.IsStopEnabled, "Stop should be disabled after stopping the route.");
+            _mockDatabaseCommunicator.Verify(d => d.AddRoute(It.IsAny<Route>()), Times.Once, "The route should be saved to the database.");
+        }
+
+        [Fact]
+        public async Task RouteStop_ShouldNotStopWhenNameIsInvalid()
+        {
+            MapViewModelTests();
+            // Arrange
+
+            await _viewModel.RouteStarting();
+            _viewModel.EntryText = " "; // Invalid name
+
+            // Act
+            _viewModel.RouteStop();
+
+            // Assert
+            Assert.False(_viewModel.IsStartEnabled, "Start should not be enabled if stopping fails.");
+            Assert.True(_viewModel.IsStopEnabled, "Stop should remain enabled if stopping fails.");
+        }
+
+        [Fact]
+        public async Task InitializeMap_ShouldSetCurrentMapSpan()
+        {
+            MapViewModelTests();
+            // Arrange
+            var mockLocation = new Location(52.370216, 4.895168); // Example location (Amsterdam)
+            _mockGeolocation.Setup(g => g.GetLocationAsync(It.IsAny<GeolocationRequest>())).ReturnsAsync(mockLocation);
+
+            // Act
+            await Task.Run(() => _viewModel.RouteStarting());
+
+            // Assert
+            Assert.NotNull(_viewModel.CurrentMapSpan);
+            Assert.Equal(mockLocation.Latitude, _viewModel.CurrentMapSpan.Center.Latitude, precision: 5);
+            Assert.Equal(mockLocation.Longitude, _viewModel.CurrentMapSpan.Center.Longitude, precision: 5);
+        }
+
+        [Fact]
+        public void UpdateRoute_ShouldAddPolylineIfEnoughLocations()
+        {
+            MapViewModelTests();
+            // Arrange
+            var location1 = new Location(52.370216, 4.895168); // Amsterdam
+            var location2 = new Location(52.371216, 4.896168); // Slightly different location
+
+            _viewModel.RouteStarting().Wait();
+            _viewModel.UpdateRoute(location1);
+            _viewModel.UpdateRoute(location2);
+
+            // Act
+            var mapElements = _viewModel.MapElements;
+
+            // Assert
+            Assert.Single(mapElements);
+            Assert.IsType<Polyline>(mapElements.First());
+        }
+
+        [Fact]
+        public void CheckHome_ShouldTriggerNotificationWhenReturningHome()
+        {
+            MapViewModelTests();
+            // Arrange
+            var homeLocation = new Location(52.370216, 4.895168); // Home location
+            var awayLocation = new Location(52.371216, 4.896168); // Away location
+
+            _viewModel.RouteStarting().Wait();
+            _viewModel.UpdateRoute(homeLocation);
+            _viewModel.CheckHome(homeLocation); // First set home
+
+            // Act
+            _viewModel.CheckHome(awayLocation); // Leave home
+            _viewModel.CheckHome(homeLocation); // Return home
+
+            // Assert
+            Assert.False(_viewModel.IsStartEnabled, "Start should remain disabled during route.");
+            // Notification logic should be mocked and verified if needed.
         }
     }
 }
