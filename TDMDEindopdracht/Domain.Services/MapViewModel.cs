@@ -151,12 +151,12 @@ namespace TDMDEindopdracht.Domain.Services
             IsStopEnabled = false;
 
             // geeft voor nu als afstand standaard 1000 mee. dit moet nog even aangepast worden naar de daadwerkelijk gelopen afstand
-            route.StopRoute(1000, EntryText);
-            _communicator.AddRoute(route);
+            
             Debug.WriteLine("EntryText text: ", EntryText);
         
             var totalDistance = CalculateTotalDistanceRoute();
-            _routeHandler.StopRoute(totalDistance, EntryText);
+            route.StopRoute(totalDistance, EntryText);
+            _communicator.AddRoute(route);
 
 
             _locationCache.Clear();
