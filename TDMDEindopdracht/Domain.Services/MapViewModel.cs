@@ -55,6 +55,7 @@ namespace TDMDEindopdracht.Domain.Services
         {
             _geolocation = geolocation;
             _communicator = databaseCommunicator;
+            _locationPermisssion = locationPermission;
             //todo: beter gezegd de currentmapspan moet naar user toe op het moment dat de map word gemaakt.
             _geolocation.LocationChanged += LocationChanged;
 
