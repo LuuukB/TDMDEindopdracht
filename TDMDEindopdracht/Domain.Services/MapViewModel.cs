@@ -20,8 +20,7 @@ namespace TDMDEindopdracht.Domain.Services
 {
     public partial class MapViewModel : ObservableObject
     {
-        //[ObservableProperty]
-        //private Map mappy;
+       
         [ObservableProperty] private bool _isStartEnabled = true;
         [ObservableProperty] private bool _isStopEnabled = false;
         [ObservableProperty] private string _entryText;
@@ -32,42 +31,77 @@ namespace TDMDEindopdracht.Domain.Services
         private Route route;
         private IDatabaseCommunicator _communicator;
 
-        //private readonly List<Location> _routeCoordinates = new();
 
         [ObservableProperty] private ObservableCollection<MapElement> _mapElements = new();
 
         private List<Location> _locationCache = [];
-
+        private ILocationPermisssionService _locationPermisssion;
 
         [ObservableProperty] public MapSpan _currentMapSpan;
 
-        //[ObservableProperty]
-        //public string currentLocation;
+     
 
-        public MapViewModel(IGeolocation geolocation, IDatabaseCommunicator databaseCommunicator)
+        public MapViewModel(IGeolocation geolocation, IDatabaseCommunicator databaseCommunicator,ILocationPermisssionService locationPermission )
         {
             _geolocation = geolocation;
             _communicator = databaseCommunicator;
-            //todo: beter gezegd de currentmapspan moet naar user toe op het moment dat de map word gemaakt.
-            InitializeMap();
+            _locationPermisssion = locationPermission;
+            
+            InitializeMapAsync();
         }
-
-        private async void InitializeMap()
+        private async void InitializeMapAsync()
         {
-            try
-            {
-                var location = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best));
+            // Wacht op het resultaat van de permissiecontrole
+            var status = await _locationPermisssion.CheckAndRequestLocationPermissionAsync();
 
-                if (location is not null)
+            if (status == PermissionStatus.Granted)
+            {
+                try
                 {
-                    CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(10));
+                    var location = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best));
+
+                    if (location is not null)
+                    {
+                        CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(10));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
                 }
             }
-            catch (Exception ex)
+            else
             {
-                Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
+                Debug.WriteLine("Locatiepermissie is niet verleend.");
+                await _locationPermisssion.ShowSettingsIfPermissionDeniedAsync();
             }
         }
+        //public async Task CheckAndRequestLocationPermission()
+        //{
+        //    var status = await _locationPermisssion.CheckAndRequestLocationPermissionAsync();
+
+        //    if (status == PermissionStatus.Denied)
+        //    {
+        //        await _locationPermisssion.ShowSettingsIfPermissionDeniedAsync();
+        //    }
+        //}
+        //private async void InitializeMap()
+        //{
+        //    await CheckAndRequestLocationPermission();
+        //    try
+        //    {
+        //        var location = await _geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best));
+
+        //        if (location is not null)
+        //        {
+        //            CurrentMapSpan = MapSpan.FromCenterAndRadius(location, Distance.FromMeters(10));
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Debug.WriteLine($"Fout bij ophalen locatie: {ex.Message}");
+        //    }
+        //}
 
         [RelayCommand]
         public void RouteStarting()
@@ -88,7 +122,7 @@ namespace TDMDEindopdracht.Domain.Services
         public void RouteStop()
         {
 
-            if (EntryText.Length == 0)
+            if (string.IsNullOrEmpty(EntryText))
             { var noName = Toast.Make("U need to fill in a name", CommunityToolkit.Maui.Core.ToastDuration.Short).Show();
                 return; }
 

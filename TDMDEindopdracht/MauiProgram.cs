@@ -40,7 +40,10 @@ namespace TDMDEindopdracht
 
             builder.Services.AddSingleton<MapViewModel>();
             builder.Services.AddSingleton<mapPage>(s => new mapPage(s.GetRequiredService<MapViewModel>()));
-            
+
+            builder.Services.AddSingleton<ILocationPermisssionService, LocationPermissionService>();
+
+
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
