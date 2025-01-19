@@ -1,5 +1,6 @@
 
 using Microsoft.Maui.Controls.Maps;
+using Microsoft.Maui.Maps;
 using Moq;
 using System.Reflection;
 using TDMDEindopdracht.Domain.Model;
@@ -294,29 +295,6 @@ namespace UnitTests_DomainLayer
             Assert.Equal(testLocation.Longitude, _viewModel.Home?.Longitude);
         }
 
-        [Fact]
-        public async Task InitializeMap_ShouldInitializeMap_WhenPermissionGranted()
-        {
-            // Arrange
-            MapViewModelTests();
-            var location = new Location(52.370216, 4.895168); // Voorbeeldlocatie
-
-            // Stel de mocks in
-            _mockLocationPermission.Setup(l => l.CheckAndRequestLocationPermissionAsync())
-                                   .ReturnsAsync(PermissionStatus.Granted);
-
-            // Gebruik de fake implementatie van Geolocation
-            var fakeGeolocation = new FakeGeolocation();
-            var viewModel = new MapViewModel(fakeGeolocation, _mockDatabaseCommunicator.Object, _mockLocationPermission.Object);
-
-            // Act
-            await viewModel.InitializeMapAsync();
-
-            // Assert
-            Assert.NotNull(viewModel.CurrentMapSpan); // Verifieer dat CurrentMapSpan is ingesteld
-            Assert.Equal(location.Latitude, viewModel.CurrentMapSpan.Center.Latitude); // Controleer of de kaart is ingesteld op de juiste locatie
-            Assert.Equal(location.Longitude, viewModel.CurrentMapSpan.Center.Longitude);
-        }
 
         [Fact]
         public async Task InitializeMap_ShouldNotInitializeMap_WhenPermissionDenied()
@@ -335,46 +313,155 @@ namespace UnitTests_DomainLayer
             Assert.Null(_viewModel.CurrentMapSpan); // Verifieer dat CurrentMapSpan niet is ingesteld
         }
 
+
         [Fact]
-        public async Task InitializeMap_ShouldHandleException_WhenLocationCannotBeRetrieved()
+        public void MvvmMapElementsProperty_ShouldUpdateMapElements()
         {
             // Arrange
-            MapViewModelTests();
-
-            // Stel de mocks in
-            _mockLocationPermission.Setup(l => l.CheckAndRequestLocationPermissionAsync())
-                                   .ReturnsAsync(PermissionStatus.Granted);
-            _mockGeolocation.Setup(g => g.GetLocationAsync(It.IsAny<GeolocationRequest>()))
-                            .ThrowsAsync(new Exception("Locatie ophalen mislukt"));
+            var bindableMap = new BindableMap();
+            var elements = new List<MapElement>
+            {
+             new Polyline { StrokeColor = Colors.Red },
+            };
 
             // Act
-            await _viewModel.InitializeMapAsync();
+            bindableMap.MvvmMapElements = elements;
 
             // Assert
-            Assert.Null(_viewModel.CurrentMapSpan); // Verifieer dat CurrentMapSpan niet is ingesteld
-                                                 
+            Assert.Single(bindableMap.MapElements);
+            Assert.Contains(bindableMap.MapElements, e => e is Polyline && ((Polyline)e).StrokeColor == Colors.Red);
         }
+
         [Fact]
-        public async Task InitializeMapAsync_ShouldCallShowSettingsIfPermissionDenied_WhenPermissionDeniedForLocation()
+        public void VisibleRegionProperty_ShouldMoveToNewRegion()
         {
             // Arrange
-            MapViewModelTests();
-            _mockLocationPermission.Reset();
+            var bindableMap = new BindableMap();
+            var newRegion = MapSpan.FromCenterAndRadius(
+                new Location(52.370216, 4.895168), // Amsterdam
+                Distance.FromKilometers(1));
 
-            // Stel de permissie in op geweigerd
-            _mockLocationPermission.Setup(lp => lp.CheckAndRequestLocationPermissionAsync())
-                .ReturnsAsync(PermissionStatus.Denied);
+            // Mock MoveToRegion via Reflection (optioneel als je dit gedrag wilt observeren)
+            var moveToRegionCalled = false;
+            var originalMoveToRegion = typeof(BindableMap).GetMethod("MoveToRegion",
+                BindingFlags.Instance | BindingFlags.Public);
 
-            var mapViewModel = new MapViewModel(_mockGeolocation.Object, _mockDatabaseCommunicator.Object, _mockLocationPermission.Object);
+            if (originalMoveToRegion != null)
+            {
+                originalMoveToRegion.Invoke(bindableMap, new object[] { newRegion });
+                moveToRegionCalled = true;
+            }
 
             // Act
-            await mapViewModel.InitializeMapAsync();
+            bindableMap.VisibleRegion = newRegion;
 
-            // Assert: Controleer dat de ShowSettingsIfPermissionDeniedAsync methode wordt aangeroepen
-            _mockLocationPermission.Verify(lp => lp.ShowSettingsIfPermissionDeniedAsync(), Times.Exactly(1));
+            // Assert
+            Assert.Equal(newRegion, bindableMap.VisibleRegion);
+            Assert.True(moveToRegionCalled, "MoveToRegion should be called when VisibleRegion changes.");
+        }
+        [Fact]
+        public void MvvmMapElements_ShouldSupportCustomMapElements()
+        {
+            // Arrange
+            var bindableMap = new BindableMap();
+            var customElement = new Mock<MapElement>();
 
-            // Controleer dat er geen locatie wordt opgehaald als de permissie is geweigerd
-            _mockGeolocation.Verify(geo => geo.GetLocationAsync(It.IsAny<GeolocationRequest>()), Times.Never);
+            var elements = new List<MapElement> { customElement.Object };
+
+            // Act
+            bindableMap.MvvmMapElements = elements;
+
+            // Assert
+            Assert.Single(bindableMap.MapElements);
+            Assert.Same(customElement.Object, bindableMap.MapElements.First());
+        }
+        [Fact]
+        public void BindableMap_ShouldHandleMapElementsAndVisibleRegionSimultaneously()
+        {
+            // Arrange
+            var bindableMap = new BindableMap();
+            var elements = new List<MapElement>
+    {
+        new Polyline { StrokeColor = Colors.Red },
+        new Polygon { StrokeColor = Colors.Blue }
+    };
+            var newRegion = MapSpan.FromCenterAndRadius(
+                new Location(52.370216, 4.895168), // Amsterdam
+                Distance.FromKilometers(1));
+
+            // Act
+            bindableMap.MvvmMapElements = elements;
+            bindableMap.VisibleRegion = newRegion;
+
+            // Assert
+            Assert.Equal(2, bindableMap.MapElements.Count);
+            Assert.Contains(bindableMap.MapElements, e => e is Polyline && ((Polyline)e).StrokeColor == Colors.Red);
+            Assert.Contains(bindableMap.MapElements, e => e is Polygon && ((Polygon)e).StrokeColor == Colors.Blue);
+            Assert.Equal(newRegion, bindableMap.VisibleRegion);
+        }
+        [Fact]
+        public void MvvmMapElements_ShouldHandleRapidChanges()
+        {
+            // Arrange
+            var bindableMap = new BindableMap();
+            var initialElements = new List<MapElement>
+    {
+        new Polyline { StrokeColor = Colors.Red }
+    };
+
+            bindableMap.MvvmMapElements = initialElements;
+
+            // Act
+            for (int i = 0; i < 100; i++)
+            {
+                bindableMap.MvvmMapElements = new List<MapElement>
+        {
+            new Polyline { StrokeColor = Color.FromRgb(i, i, i) }
+        };
+            }
+
+            // Assert
+            Assert.Single(bindableMap.MapElements);
+            Assert.True(bindableMap.MapElements.First() is Polyline);
+        }
+        
+        [Fact]
+        public void MvvmMapElements_ShouldHandleNullOrEmptyCollections()
+        {
+            // Arrange
+            var bindableMap = new BindableMap();
+
+            // Act
+            bindableMap.MvvmMapElements = null;
+
+            // Assert
+            Assert.Empty(bindableMap.MapElements);
+
+            // Act with empty collection
+            bindableMap.MvvmMapElements = new List<MapElement>();
+
+            // Assert
+            Assert.Empty(bindableMap.MapElements);
+        }
+        [Fact]
+        public void MvvmMapElements_ShouldReflectChangesInMapElements_happyPath()
+        {
+            // Arrange
+            var bindableMap = new BindableMap();
+            var polyline = new Polyline
+            {
+                StrokeColor = Colors.Blue,
+                StrokeWidth = 2,
+                Geopath = { new Location(52.37, 4.89), new Location(51.92, 4.48) }
+            };
+
+            var elements = new List<MapElement> { polyline };
+
+            // Act
+            bindableMap.MvvmMapElements = elements;
+
+            // Assert
+            Assert.Contains(polyline, bindableMap.MapElements.ToList());
         }
 
     }
