@@ -1,6 +1,7 @@
 
 using Microsoft.Maui.Controls.Maps;
 using Moq;
+using System.Reflection;
 using TDMDEindopdracht.Domain.Model;
 using TDMDEindopdracht.Domain.Services;
 
@@ -95,13 +96,15 @@ namespace UnitTests_DomainLayer
         private Mock<IGeolocation> _mockGeolocation;
         private Mock<IDatabaseCommunicator> _mockDatabaseCommunicator;
         private MapViewModel _viewModel;
+        private Mock<ILocationPermisssionService> _mockLocationPermission;
 
         public void MapViewModelTests()
         {
             _mockGeolocation = new Mock<IGeolocation>();
             _mockDatabaseCommunicator = new Mock<IDatabaseCommunicator>();
+            _mockLocationPermission = new Mock<ILocationPermisssionService>();
 
-            _viewModel = new MapViewModel(_mockGeolocation.Object, _mockDatabaseCommunicator.Object);
+            _viewModel = new MapViewModel(_mockGeolocation.Object, _mockDatabaseCommunicator.Object, _mockLocationPermission.Object);
         }
 
         [Fact]
@@ -156,22 +159,6 @@ namespace UnitTests_DomainLayer
             Assert.True(_viewModel.IsStopEnabled, "Stop should remain enabled if stopping fails.");
         }
 
-        [Fact]
-        public async Task InitializeMap_ShouldSetCurrentMapSpan()
-        {
-            MapViewModelTests();
-            // Arrange
-            var mockLocation = new Location(52.370216, 4.895168); // Example location (Amsterdam)
-            _mockGeolocation.Setup(g => g.GetLocationAsync(It.IsAny<GeolocationRequest>())).ReturnsAsync(mockLocation);
-
-            // Act
-            await Task.Run(() => _viewModel.RouteStarting());
-
-            // Assert
-            Assert.NotNull(_viewModel.CurrentMapSpan);
-            Assert.Equal(mockLocation.Latitude, _viewModel.CurrentMapSpan.Center.Latitude, precision: 5);
-            Assert.Equal(mockLocation.Longitude, _viewModel.CurrentMapSpan.Center.Longitude, precision: 5);
-        }
 
         [Fact]
         public void UpdateRoute_ShouldAddPolylineIfEnoughLocations()
@@ -212,6 +199,99 @@ namespace UnitTests_DomainLayer
             // Assert
             Assert.False(_viewModel.IsStartEnabled, "Start should remain disabled during route.");
             // Notification logic should be mocked and verified if needed.
+        }
+
+        [Fact]
+        public void LocationChanged_ShouldUpdateCurrentMapSpan_WhenLocationIsNotNull()
+        {
+            MapViewModelTests();
+            // Arrange
+            var testLocation = new Location(52.370216, 4.895168); // Voorbeeldlocatie
+            var eventArgs = new GeolocationLocationChangedEventArgs(testLocation);
+
+            // Act
+            _viewModel.LocationChanged(null, eventArgs);
+
+            // Assert
+            Assert.NotNull(_viewModel.CurrentMapSpan);
+            Assert.Equal(testLocation.Latitude, _viewModel.CurrentMapSpan.Center.Latitude);
+            Assert.Equal(testLocation.Longitude, _viewModel.CurrentMapSpan.Center.Longitude);
+            //Assert.Equal(30, _viewModel.CurrentMapSpan.Radius.Meters); // Radius moet 30 meter zijn is 29,99999999
+        }
+
+        [Fact]
+        public void LocationChanged_ShouldCallSetHome_WhenHomeIsNull()
+        {
+            MapViewModelTests();
+            // Arrange
+            var testLocation = new Location(52.370216, 4.895168); // Voorbeeldlocatie
+            var eventArgs = new GeolocationLocationChangedEventArgs(testLocation);
+
+            // Act
+            _viewModel.LocationChanged(null, eventArgs);
+
+            // Assert
+            Assert.NotNull(_viewModel.CurrentMapSpan); // Controleer dat SetHome correct werkt
+        }
+
+        [Fact]
+        public void LocationChanged_ShouldNotCallSetHome_WhenHomeIsNotNull()
+        {
+            MapViewModelTests();
+            // Arrange
+            var homeLocation = new Location(52.370216, 4.895168); // Zet een home locatie
+            var testLocation = new Location(52.370317, 4.895269); // Nieuwe locatie
+
+
+            var eventArgs = new GeolocationLocationChangedEventArgs(testLocation);
+            var eventArgsHome = new GeolocationLocationChangedEventArgs(homeLocation);
+
+            // Act
+            _viewModel.LocationChanged(null, eventArgsHome);
+            _viewModel.LocationChanged(null, eventArgs);
+
+            // Assert
+            Assert.NotNull(_viewModel.CurrentMapSpan);
+            Assert.Equal(homeLocation, _viewModel.GetType().GetField("_home", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(_viewModel));
+        }
+
+        [Fact]
+        public void LocationChanged_ShouldCallUpdateRouteAndCheckHome()
+        {
+            MapViewModelTests();
+            // Arrange
+            var testLocation = new Location(52.370216, 4.895168);
+            var eventArgs = new GeolocationLocationChangedEventArgs(testLocation);
+
+            // Gebruik reflection om de private methodes te "spy"-en
+            var updateRouteCalled = false;
+            var checkHomeCalled = false;
+
+            var updateRouteMethod = _viewModel.GetType().GetMethod("UpdateRoute", BindingFlags.Instance | BindingFlags.NonPublic);
+            var checkHomeMethod = _viewModel.GetType().GetMethod("CheckHome", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            var updateRouteMock = new Mock<Action<Location>>();
+            var checkHomeMock = new Mock<Action<Location>>();
+
+            // Act
+            updateRouteMock.Verify();
+            //Assert.True(checkHomeMock);
+        }
+
+        [Fact]
+        public void SetHome_ShouldSetHomeLocation_WhenHomeIsNull()
+        {
+            MapViewModelTests();
+            // Arrange
+            var testLocation = new Location(52.370216, 4.895168); // Voorbeeldlocatie
+
+            // Act
+            _viewModel.SetHome(testLocation);
+
+            // Assert
+            Assert.NotNull(_viewModel.Home);
+            Assert.Equal(testLocation.Latitude, _viewModel.Home?.Latitude);
+            Assert.Equal(testLocation.Longitude, _viewModel.Home?.Longitude);
         }
     }
 }

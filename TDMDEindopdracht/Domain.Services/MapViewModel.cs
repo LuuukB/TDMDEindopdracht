@@ -32,6 +32,7 @@ namespace TDMDEindopdracht.Domain.Services
         [ObservableProperty] private string _entryText;
 
         private Location? _home;
+        public Location? Home => _home;
         private bool _hasLeftHome = false;
         private const double HomeRadiusMeters = 15.0;
 
@@ -61,7 +62,7 @@ namespace TDMDEindopdracht.Domain.Services
 
             InitializeMapAsync();
         }
-        private void LocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
+        public void LocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
         {
             if (e?.Location != null)
             { 
@@ -82,7 +83,7 @@ namespace TDMDEindopdracht.Domain.Services
             }
         }
 
-        private void SetHome(Location location)
+        public void SetHome(Location location)
         {
             if (_home == null)
             {
@@ -104,7 +105,7 @@ namespace TDMDEindopdracht.Domain.Services
         {
             _geolocation.StopListeningForeground();
         }
-        private async void InitializeMapAsync()
+        public async void InitializeMapAsync()
         {
             // Wacht op het resultaat van de permissiecontrole
             var status = await _locationPermisssion.CheckAndRequestLocationPermissionAsync();
